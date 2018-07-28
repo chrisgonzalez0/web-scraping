@@ -195,7 +195,7 @@ colnames(p)=c("name","id","first_letter")
 # p=p[p$id %in% roster$id[roster$year %in% c("2011","2012","2013","2014","2015","2016","2017")],]
 
 player_key=data.frame()
-for(i in 388:nrow(p)){
+for(i in 463:nrow(p)){
   url=paste("https://www.basketball-reference.com/players/",p$first_letter[i],"/",p$id[i],".html",sep="")
   tabs=getURL(url)  
   read=readHTMLTable(tabs)
@@ -262,7 +262,7 @@ load("nba_player_key.RData")
 
 games=unique(temp$box_id)
 boxscores=data.frame()
-for(i in 12297:length(games)){
+for(i in 217:length(games)){
   url=paste("https://www.basketball-reference.com/boxscores/",games[i],".html",sep="")
   tabs=getURL(url)  
   read=readHTMLTable(tabs)
@@ -321,8 +321,15 @@ id=unique(id)
   
   }  
   
+save(boxscores,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/boxscores.RData")
+save(roster,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/roster.RData")
+save(final_data,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/teams.RData")
+save(temp,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/schedules.RData")
+save(player_key,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/player_key.RData")
 
-  https://www.basketball-reference.com/boxscores/201706120GSW.html
+
+
+  #https://www.basketball-reference.com/boxscores/201706120GSW.html
   
   
   
