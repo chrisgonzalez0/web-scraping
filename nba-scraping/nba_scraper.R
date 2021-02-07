@@ -6,7 +6,7 @@ library(RCurl)
 # zz=1
 # year=c("2017")
 
-year=seq(2018,2018,by=1)
+year=seq(2019,2020,by=1)
 year=as.character(year)
 
 final_data=data.frame()
@@ -77,8 +77,13 @@ for(i in 1:nrow(final_data)){
   link=paste(readLines(paste("https://www.basketball-reference.com/teams/",final_data$team_id[i],"/",final_data$year[i],".html",sep="")),collapse=" ")
   
   # Characters to Search in text
-  char1="data-append-csv=\""
-  char2="\" "
+  
+  check=unlist(gregexpr("all_roster",link))
+  
+  link=substr(link,check,nchar(link))
+  
+  char1="\\players"
+  char2=".html"
   start=unlist(gregexpr(char1,link))
   stops=unlist(gregexpr(char2,link))
   
@@ -106,6 +111,9 @@ for(i in 1:nrow(final_data)){
 }
 
 colnames(roster)=c("number","name","pos","height","weight","bday","country","yrs_pro","school","id","year","team")
+
+roster$id=substr(roster$id,3,nchar(roster$id))
+
 
 ## Save Datasets as a safety
 save(roster,file="nba_roster.RData")
@@ -210,7 +218,7 @@ for(i in 1:nrow(p)){
   # College Scraper, this will match up what the player's 
   # college basketball key is
   char1="<a href=\"https://www.sports-reference.com/cbb/players/"
-  char2=".html\">"
+  char2=".html"
   start=unlist(gregexpr(char1,link))
   stops=unlist(gregexpr(char2,link))
   
@@ -218,6 +226,8 @@ for(i in 1:nrow(p)){
   xx=merge(start,stops)
   xx$logic=(xx$x < xx$y)*1
   xx=xx[xx$logic==1,]
+  xx$diff=xx$y-xx$x
+  ##xx=xx[xx$diff < 30,]
   xx$rank = ave (xx$y, xx$x, FUN = function(x) rank (x, ties.method ="min"))
   xx=xx[xx$rank==1,]
 
@@ -231,8 +241,8 @@ for(i in 1:nrow(p)){
   }else{college=""}
 
   # Euro Scraper, this extracts european player key (if they have one)
-  char1="<a href=\"https://www.basketball-reference.com/euro/"
-  char2=".html\">"
+  char1="<a href=\"https://www.basketball-reference.com/euro/players/"
+  char2=".html\""
   start=unlist(gregexpr(char1,link))
   stops=unlist(gregexpr(char2,link))
   
@@ -240,6 +250,9 @@ for(i in 1:nrow(p)){
   xx=merge(start,stops)
   xx$logic=(xx$x < xx$y)*1
   xx=xx[xx$logic==1,]
+  xx$diff=xx$y-xx$x
+  ##xx=xx[xx$diff < 30,]
+  
   xx$rank = ave (xx$y, xx$x, FUN = function(x) rank (x, ties.method ="min"))
   xx=xx[xx$rank==1,]
   
@@ -299,6 +312,7 @@ for(i in 1:length(games)){
 id=unique(id)  
   names=names(read)[grep("box",names(read))] 
   names=names[grep("basic",names)] 
+  names=names[grep("game",names)] 
   temp1=data.frame(read[names[1]])
   temp2=data.frame(read[names[2]])
   temp1=temp1[temp1[,2]!="MP",]
