@@ -4,11 +4,17 @@ drv <- dbDriver("PostgreSQL")
 con <- dbConnect(drv, dbname="basketball",user="postgres",password="estarguars",host = "localhost", port = 5432)
 
 ## Change working directory for local run and data set location
-setwd("/Users/chrisgonzalez/Downloads/Scripting Basketball/")
-load("2017_teams.RData")
+setwd("/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/")
+load("2019_teams.RData")
 
 ## Team Inserts 
 temp=teams
+colnames(temp)=make.names(colnames(temp))
+cols=colnames(temp)[!(make.names(colnames(temp)) %in% c("X.","X..1","X..2","X..4"))]
+temp$X..3="NULL"
+
+temp=temp[,cols]
+
 x=paste(temp,collapse = ",",sep="")
 x=apply(temp,1,function(x) { paste(x,collapse=",")})
 x=paste("(",x,")",sep="")
@@ -24,7 +30,7 @@ for (i in 1:(length(bands)-1)){
 }
 
 # College Rosters Inserts 
-load("2017_rosters.RData")
+load("2019_rosters.RData")
 rosters=rosters[,c(-2,-6,-7,-8)]
 temp=rosters
 
@@ -124,7 +130,7 @@ for(j in 1:length(files)){
   
 
 ## Write Schedules into db 
-load("schedules_2018.RData")  
+load("schedules_2019.RData")  
 
 schedules$Opponent=gsub("'","",schedules$Opponent)
 schedules$Opponent=paste("'",schedules$Opponent,"'",sep="")

@@ -3,7 +3,7 @@ library(XML)
 library(RCurl)
 # Set Up Vars #
 zz=1
-year=c("2018")
+year=c("2019")
 
 ## Scrape Seasons to pull back detail list fo schools ##
 url <- paste("https://www.sports-reference.com/cbb/seasons/",year[zz],"-school-stats.html",sep="")
@@ -75,19 +75,20 @@ for(i in 1:nrow(teams)){
   
   link=iconv(link,from="latin1",to="UTF-8")
 
-  start=unlist(gregexpr("data-append-csv=\"",link))
-  stops=unlist(gregexpr("\" data-stat=\"",link))
+  start=unlist(gregexpr("<a href='/cbb/players/",link))
+  stops=unlist(gregexpr(".html'>",link))
   
   
   xx=merge(start,stops)
   xx$logic=(xx$x < xx$y)*1
   xx=xx[xx$logic==1,]
+  ##xx$diff=xx$y-xx$x
   xx$rank = ave (xx$y, xx$x, FUN = function(x) rank (x, ties.method ="min"))
   xx=xx[xx$rank==1,]
   
   id=c()
   for(j in 1:nrow(xx)){
-    test=substr(link,xx$x[j]+17,xx$y[j]-1)
+    test=substr(link,xx$x[j]+22,xx$y[j]-1)
     id=c(id,test)
     
   }
@@ -96,6 +97,8 @@ for(i in 1:nrow(teams)){
   roster$team=teams$id[i]
   roster$year=year[zz]
   
+  roster=roster[,c("Player","#","Class","Pos","Height","Weight","Hometown",
+                   "High School","Summary","id","team","year" )]
   
   rosters=rbind(rosters,roster)  
   
@@ -113,8 +116,8 @@ rosters$Summary=paste("'",rosters$Summary,"'",sep="")
 rosters$id=paste("'",rosters$id,"'",sep="")
 # rosters$team=paste("'",rosters$team,"'",sep="")
 
-save(rosters,file="2018_rosters.RData")
-save(teams,file="2018_teams.RData")
+save(rosters,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/2019_rosters.RData")
+save(teams,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/2019_teams.RData")
 
 # Roster Inserts
 # library(DBI)
@@ -202,8 +205,8 @@ schedules$Time=""
 schedules$Network=""
 
 # 2014 and Less
-#colnames(schedules)=c("G","Date","Type","h_a","Opponent","Conf","h_a2","Tm","Opp",
-#                      "OT","W","L","Streak","Arena","team_id","id","opp_team_id","year","Time","Network")
+colnames(schedules)=c("G","Date","Time","Type","h_a","Opponent","Conf","h_a2","Tm","Opp",
+                     "OT","W","L","Streak","Arena","team_id","id","opp_team_id","year","Network")
 
 # 2015 and New
  colnames(schedules)=c("G","Date","Time","Network","Type","h_a","Opponent","Conf","h_a2","Tm","Opp",
@@ -231,7 +234,7 @@ schedules$team_id=paste("'",schedules$team_id,"'",sep="")
 schedules$id=paste("'",schedules$id,"'",sep="")
 schedules$opp_team_id=paste("'",schedules$opp_team_id,"'",sep="")
 
-save(schedules,file="schedules_2018.RData")
+save(schedules,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/schedules_2019.RData")
 
 # Schedules Inserts 
 # library(RPostgreSQL)
@@ -252,14 +255,14 @@ save(schedules,file="schedules_2018.RData")
 
 count=1
 box=data.frame()
-for(i in 1:nrow(schedules)){
+for(i in 667:nrow(schedules)){
   url <- paste("https://www.sports-reference.com/cbb/boxscores/",gsub("'","",schedules$id[i]),".html",sep="")
   tabs <- getURL(url)
   read <- readHTMLTable(tabs, stringsAsFactors = F)
   
   #read=readHTMLTable(paste("http://www.sports-reference.com/cbb/boxscores/",gsub("'","",schedules$id[i]),".html",sep=""))  
   n=names(read)
-  n=n[grep("box-score",n)]
+  n=n[grep("box-score-basic",n)]
   read=read[n]
   for(k in 1:length(read)){
     boxes=read[[k]]
@@ -275,8 +278,8 @@ for(i in 1:nrow(schedules)){
   gc()
   
   if(nrow(box)>10000){
-    save(box,file=paste(year[zz],"_pt",count,".RData",sep=""))
-    save(i,file="i.RData")
+    save(box,file=paste("/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/",year[zz],"_pt",count,".RData",sep=""))
+    # save(i,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/boxscores_2019.RData")
     count=count+1
     box=data.frame()
     gc()
