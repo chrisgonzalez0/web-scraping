@@ -301,12 +301,61 @@ for tr in range(len(team_refs)):
 
 
 
+### player hrefs
+player_hrefs=[item for sublist in player_hrefs for item in sublist]
+player_hrefs=list(set(player_hrefs))
+
+#player_hrefs_links=[]
+
+player_hrefs_df=pd.DataFrame()
+for pr in range(6695,len(player_hrefs)):
+    player_url="https://www.pro-football-reference.com/"+player_hrefs[pr]
+    # grab main url
+    r = requests.get(player_url)
+    text=r.content   # get request content
+    
+    # allow all tables to show, replace commented out code blocks
+    text=text.replace(b'<!--',b'')
+    text=text.replace(b'-->',b'')
+    
+    # parse fully viewed page
+    soup = BeautifulSoup(text, 'html.parser')
+    
+    # get all links in paragraphs in html page
+    all_links = soup.select('p a[href]')
+    flag=0
+    for j in range(len(all_links)):        
+        if 'https://www.sports-reference.com/cfb/players/' in str(all_links[j]):
+            flag=1
+            #player_hrefs_links.append(str(all_links[j]))
+            
+            player_hrefs_df=player_hrefs_df.append( [[player_hrefs[pr], str(all_links[j])]] )            
+    if flag==0:
+        #player_hrefs_links.append('')
+        player_hrefs_df=player_hrefs_df.append( [[player_hrefs[pr], '' ]] )
+    print(pr)
+    print(player_hrefs[pr])   
+
+with open('player_hrefs_df.pkl', 'wb') as f:
+    pickle.dump(player_hrefs_df, f)
+            
+    
+    
+    
+    
+    # find all table elements
+    parsed_table = soup.find_all('table')
 
 
+
+
+#### box score hrefs
 box_score_refs=[item for sublist in box_score_refs for item in sublist]
 box_score_refs=list(set(box_score_refs))
           
         
+with open('box_score_refs.pkl', 'wb') as f:
+    pickle.dump(box_score_refs, f)
 
         
         
