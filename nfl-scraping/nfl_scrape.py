@@ -119,6 +119,13 @@ for yearsi in years:
         with open('years_'+str(yearsi)+'.pkl', 'wb') as f:
             pickle.dump(years_tables, f)
         """
+
+## save team_refs in case we need to re-grab data
+"""
+with open('team_refs.pkl', 'wb') as f:
+    pickle.dump(team_refs, f)
+"""
+        
 #### end loop for years data ####
 
         
