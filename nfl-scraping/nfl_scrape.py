@@ -265,19 +265,6 @@ for tr in range(len(team_refs)):
 with open('coaches_gms_refs_upto2020'+'.pkl', 'wb') as f:
     pickle.dump(coaches_gms_refs, f)
 """                
-                
-                    
-                
-                
-                
-    all_links_labels[11].select('strong')
-    values=all_links_labels[11].select('a[href]')
-
-
-
-
-
-
 
 ## team rosters loop
 player_hrefs=[]
@@ -543,31 +530,3 @@ for br in range(4000,len(box_score_refs)):
         pickle.dump(box_score_dfs, f)
 
         
-
-
-
-
-
-
-
-
-       
-    
-    ## year loop done ##
-    print(years[yy])
-
-
-
-
-
-# header
-tname=onetable.find_all('data-stat')
-tname=tname.find('data-stat')
-
-row=t.find_all('thead')
-
-rr=row.find('th', attrs={'data-stat'})
-
-
-
-df = []
