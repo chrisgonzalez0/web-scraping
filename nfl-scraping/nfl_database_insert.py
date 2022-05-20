@@ -16,9 +16,9 @@ os.chdir('/Users/chrisgonzalez/web-scraping/nfl-scraping/')
 
 files=os.listdir()
 
-roster_files=[x for x in files if "roster" in x]
-ph = pd.read_pickle('player_hrefs_df.pkl')
 
+##### ROSTER DATA (2 Data frames for upload roster1,roster2) #####
+roster_files=[x for x in files if "roster" in x]
 ## load sample roster files and create empty master data frames
 roster_dfs=pd.read_pickle(roster_files[0])
 roster1_temp=roster_dfs[0]
@@ -72,10 +72,11 @@ split_str=[str(x).replace("/teams", "") for x in roster2['team_href'] ]
 split_str = [ re.search('/(.*)/', x) for x in split_str ]
 split_str=[ x.group(1) for x in split_str ]
 roster2['team_id']=split_str
+############################################################################
 
 
-
-#### player to college 
+###### player to college map ######
+ph = pd.read_pickle('player_hrefs_df.pkl')
 ph.columns=['player_href','college_href']
 ## player id
 split_str=[str(x).replace("/players/", "") for x in ph['player_href'] ]
@@ -88,15 +89,16 @@ split_str = [ re.search('/(.*).htm', x) for x in split_str ]
 split_str=[ x.group(1) for x in split_str if x]
 ph['college_id']=''
 ph['college_id'][ph['college_href']!=''] =split_str
+############################################################################
 
 
-
-
-
+###### summary of every year data ######
+years_files=[x for x in files if "years" in x]
+year_dfs=pd.read_pickle(years_files[0])
 
 
 
 games_files=[x for x in files if "games" in x]
-years_files=[x for x in files if "years" in x]
+
 
 
