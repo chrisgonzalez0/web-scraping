@@ -96,9 +96,56 @@ ph['college_id'][ph['college_href']!=''] =split_str
 years_files=[x for x in files if "years" in x]
 year_dfs=pd.read_pickle(years_files[0])
 
+years=pd.DataFrame(columns=['Tm','W','L','W-L%','PF','PA','PD','MoV',
+                            'SoS','SRS','OSRS','DSRS','table_id','href','year'])
 
+for i in range(len(years_files)):
+    years_dfs=pd.read_pickle(years_files[i])
+    years=pd.concat([years,years_dfs[0]])
+    years=pd.concat([years,years_dfs[1]])
 
+## team id 
+split_str=[str(x).replace("/teams", "") for x in years['href'] ]
+split_str = [ re.search('/(.*)/', x) for x in split_str ]
+split_str=[ x.group(1) for x in split_str ]
+years['team_id']=split_str
+############################################################################
+    
+
+###### schedule data ######
 games_files=[x for x in files if "games" in x]
+#games_dfs=pd.read_pickle(games_files[0])
+schedule=pd.DataFrame(columns=['Week','Day','Date','time','label','outcome','OT','Rec','home_away','Opp','Score_Tm','Score_Opp','Offense_1stD','Offense_TotYd',
+ 'Offense_PassY','Offense_RushY','Offense_TO','Defense_1stD','Defense_TotYd','Defense_PassY','Defense_RushY',
+ 'Defense_TO','Expected Points_Offense','Expected Points_Defense','Expected Points_Sp. Tms',
+ 'table_id','boxscore_href','team_href'])
+
+for i in range(len(games_files)):
+    games=pd.read_pickle(games_files[i])
+    games.columns=['Week','Day','Date','time','label','outcome','OT','Rec','home_away','Opp','Score_Tm','Score_Opp','Offense_1stD','Offense_TotYd',
+                   'Offense_PassY','Offense_RushY','Offense_TO','Defense_1stD','Defense_TotYd','Defense_PassY','Defense_RushY',
+                   'Defense_TO','Expected Points_Offense','Expected Points_Defense','Expected Points_Sp. Tms','table_id','boxscore_href','team_href']
+    schedule=pd.concat([schedule,games])
+## team id 
+split_str=[str(x).replace("/teams", "") for x in schedule['team_href'] ]
+split_str = [ re.search('/(.*)/', x) for x in split_str ]
+split_str=[ x.group(1) for x in split_str ]
+schedule['team_id']=split_str
+## year
+split_str=[str(x).replace("/teams/", "") for x in schedule['team_href'] ]
+split_str = [ re.search('/(.*).htm', x) for x in split_str ]
+split_str=[ x.group(1) for x in split_str ]
+schedule['year']=split_str
+## boxscore_id
+split_str=[str(x).replace("/boxscores", "") for x in schedule['boxscore_href'] ]
+split_str = [ re.search('/(.*).htm', x) for x in split_str ]
+split_str=[ x.group(1) for x in split_str ]
+schedule['boxscore_id']=split_str
+############################################################################
 
 
+
+
+files=os.listdir('boxscores')
+box=pd.read_pickle('boxscores/'+files[0])
 
