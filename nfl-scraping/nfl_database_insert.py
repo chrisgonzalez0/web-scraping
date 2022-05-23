@@ -145,7 +145,65 @@ schedule['boxscore_id']=split_str
 
 
 
-
+## offense, defemse, kick return, kicks, starters, snapcount, play by play 
 files=os.listdir('boxscores')
-box=pd.read_pickle('boxscores/'+files[0])
+offense=pd.DataFrame(columns=['Player','Tm','Passing_Cmp','Passing_Att','Passing_Yds',
+                              'Passing_TD','Passing_Int','Passing_Sk','Passing_Yds.1',
+                              'Passing_Lng','Passing_Rate','Rushing_Att','Rushing_Yds',
+                              'Rushing_TD','Rushing_Lng','Receiving_Tgt','Receiving_Rec',
+                              'Receiving_Yds','Receiving_TD','Receiving_Lng','Fumbles_Fmb',
+                              'Fumbles_FL','table_id','player_href','box_score_id'])
+defense=pd.DataFrame(columns=['Player','Tm','Def Interceptions_Int','Def Interceptions_Yds',
+                              'Def Interceptions_TD','Def Interceptions_Lng','Def Interceptions_PD',
+                              'Sk','Tackles_Comb','Tackles_Solo','Tackles_Ast','Tackles_TFL',
+                              'Tackles_QBHits','Fumbles_FR','Fumbles_Yds','Fumbles_TD',
+                              'Fumbles_FF','table_id','player_href','box_score_id'])
+kick_return=pd.DataFrame(columns=['Player','Tm','Kick Returns_Rt','Kick Returns_Yds',
+                                  'Kick Returns_Y/Rt','Kick Returns_TD','Kick Returns_Lng',
+                                  'Punt Returns_Ret','Punt Returns_Yds','Punt Returns_Y/R',
+                                  'Punt Returns_TD','Punt Returns_Lng','table_id','player_href','box_score_id'])
+kicking=pd.DataFrame(columns=['Player','Tm','Scoring_XPM','Scoring_XPA','Scoring_FGM',
+                              'Scoring_FGA','Punting_Pnt','Punting_Yds','Punting_Y/P',
+                              'Punting_Lng','table_id','player_href','box_score_id'])
+starters=pd.DataFrame(columns=['Player','Pos','table_id','player_href','box_score_id'])
+snapcount=pd.DataFrame(columns=['Player','Pos','Off._Num','Off._Pct','Def._Num','Def._Pct',
+                                'ST_Num','ST_Pct','table_id','player_href','box_score_id'])
+pbp=pd.DataFrame(columns=['Quarter','Time','Down','ToGo','Location','Detail','away_team','home_team',
+                          'EPB','EPA','table_id','box_score_id'])
+
+
+for i in range(len(files)):
+    print(files[i])
+    box=pd.read_pickle('boxscores/'+files[i])
+    
+    for j in range(len(box)):
+        
+        if 'player_offense'==box[j]['table_id'].unique()[0]:
+            offense=pd.concat([offense,box[j]])
+
+        if 'player_defense'==box[j]['table_id'].unique()[0]:
+            defense=pd.concat([defense,box[j]])
+
+        if 'returns'==box[j]['table_id'].unique()[0]:
+            kick_return=pd.concat([kick_return,box[j]])
+
+        if 'kicking'==box[j]['table_id'].unique()[0]:
+            kicking=pd.concat([kicking,box[j]])
+
+        if 'starters' in box[j]['table_id'].unique()[0]:
+            starters=pd.concat([starters,box[j]])
+
+        if 'snap_counts' in box[j]['table_id'].unique()[0]:
+            snapcount=pd.concat([snapcount,box[j]])
+
+        if 'pbp'==box[j]['table_id'].unique()[0]:
+            box[j].columns=['Quarter','Time','Down','ToGo','Location','Detail','away_team','home_team',
+                          'EPB','EPA','table_id','box_score_id']
+            pbp=pd.concat([pbp,box[j]])
+
+
+
+
+
+
 
