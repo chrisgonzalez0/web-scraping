@@ -144,8 +144,8 @@ schedule['boxscore_id']=split_str
 ############################################################################
 
 
-
-## offense, defemse, kick return, kicks, starters, snapcount, play by play 
+###### boxscore data ######
+## offense, defemse, kick return, kicks, starters, snapcount, play by play ##
 files=os.listdir('boxscores')
 offense=pd.DataFrame(columns=['Player','Tm','Passing_Cmp','Passing_Att','Passing_Yds',
                               'Passing_TD','Passing_Int','Passing_Sk','Passing_Yds.1',
@@ -200,6 +200,20 @@ for i in range(len(files)):
             box[j].columns=['Quarter','Time','Down','ToGo','Location','Detail','away_team','home_team',
                           'EPB','EPA','table_id','box_score_id']
             pbp=pd.concat([pbp,box[j]])
+############################################################################
+
+
+## clean data sets and formats
+offense['Passing_Cmp']=offense['Passing_Cmp'].astype(float)
+offense['Passing_Att']=offense['Passing_Att'].astype(float)
+offense['Passing_Yds']=offense['Passing_Yds'].astype(float)
+
+## insert to postgres
+from sqlalchemy import create_engine
+import psycopg2
+engine = create_engine('postgresql://postgres:estarguars@localhost:5432/postgres')
+roster1.to_sql('test_roster1', engine)
+
 
 
 
