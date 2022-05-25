@@ -212,10 +212,39 @@ offense['Passing_Yds']=offense['Passing_Yds'].astype(float)
 from sqlalchemy import create_engine
 import psycopg2
 engine = create_engine('postgresql://postgres:estarguars@localhost:5432/postgres')
-roster1.to_sql('test_roster1', engine)
 
+## roster 1
+roster1.to_sql('team_starters', engine)
+## roster 2
+roster2.to_sql('team_rosters',engine)
+## player key 
+ph.to_sql('player_keys',engine)
+## year_summaries
+years.to_sql('year_summaries',engine)
+## team schedules
+schedule.to_sql('team_schedules',engine)
+## team boxscores
+offense.to_sql('boxscore_offense',engine)
+defense.to_sql('boxscore_defense',engine)
+kick_return.to_sql('boxscore_kick_returns',engine)
+kicking.to_sql('boxscore_kicking',engine)
 
+## team stats
+starters.to_sql('boxscore_starters',engine)
+snapcount.to_sql('boxscore_snapcount',engine)
 
+## play by play 
+pbp['Quarter']=pbp['Quarter'].astype('string')
+pbp=pbp.loc[ pbp['Quarter']!='1st Quarter'  , : ] 
+pbp=pbp.loc[ pbp['Quarter']!='2nd Quarter'  , : ] 
+pbp=pbp.loc[ pbp['Quarter']!='3rd Quarter'  , : ] 
+pbp=pbp.loc[ pbp['Quarter']!='4th Quarter'  , : ] 
+pbp=pbp.loc[ pbp['Quarter']!='Quarter'  , : ] 
+pbp=pbp.loc[ pbp['Quarter']!='End of Regulation'  , : ] 
+pbp=pbp.loc[ pbp['Quarter']!='End of Overtime'  , : ] 
+pbp=pbp.loc[ pbp['Quarter']!='OT'  , : ] 
+pbp=pbp.loc[ pbp['Quarter']!='Overtime'  , : ] 
+pbp.to_sql('boxscore_pbp',engine)
 
 
 
