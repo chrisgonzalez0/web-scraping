@@ -247,8 +247,10 @@ with open('conference_awards.pkl', 'wb') as f:
     pickle.dump(conference_awards, f)
 
 
+### start college by college ###
+colleges_href=conference_teams['college_href'].to_list()
 
-
+## grab roster and schedule
 
 
 
