@@ -238,9 +238,17 @@ for k in range(len(conf_hrefs)):
                 continue
 
 ## remove weird rows from conference teams
+conference_teams=conference_teams.loc[ conference_teams['college_href']!='' , : ]
+
 """ save datasets """            
 with open('conference_teams.pkl', 'wb') as f:
     pickle.dump(conference_teams, f)
 with open('conference_awards.pkl', 'wb') as f:
     pickle.dump(conference_awards, f)
+
+
+
+
+
+
 
