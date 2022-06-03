@@ -250,7 +250,163 @@ with open('conference_awards.pkl', 'wb') as f:
 ### start college by college ###
 colleges_href=conference_teams['college_href'].to_list()
 
-## grab roster and schedule
+# grab roster first
+#'https://www.sports-reference.com/cfb/schools/georgia/2020.html'
+#https://www.sports-reference.com/cfb/schools/georgia/2020-roster.html
+#https://www.sports-reference.com/cfb/schools/georgia/2020-schedule.html
+roster=pd.DataFrame(columns=['Player', 'Class', 'Pos', 'Summary', 'player_href', 'college_href'])
+## grab roster
+for k in range(len(colleges_href)):
+    URL = "https://www.sports-reference.com"+colleges_href[k].replace('.html','-roster.html')  
+    # grab main url
+    r = requests.get(URL)
+    text=r.content   # get request content
+    
+    # allow all tables to show, replace commented out code blocks
+    text=text.replace(b'<!--',b'')
+    text=text.replace(b'-->',b'')
+    
+    # parse fully viewed page
+    soup = BeautifulSoup(text, 'html.parser')
+    
+    # find all table elements
+    parsed_table = soup.find_all('table')
+    # find all tables
+    try: 
+        df=pd.read_html(text)
+    except:
+        continue
+        pass
+        
+    # loop to get all hrefs and clean up tables
+    for i in range(len(parsed_table)):
+        # check
+        onetable=parsed_table[i]
+        df_temp=df[i]
+        
+        # deal with column names that have multiple headers 
+        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
+            col0=df_temp.columns.get_level_values(0).tolist()
+            col1=df_temp.columns.get_level_values(1).tolist()
+            col_final=[]
+            for x,y in zip(col0,col1):
+                if 'Unnamed' in x:
+                    x=''
+                if 'Unnamed' in y:
+                    y=''
+                if x=='':
+                    col_final.append(x+''+y)
+                else:
+                    col_final.append(x+'_'+y)            
+            df_temp.columns=col_final
+            
+        # retrieves table id
+        try:
+            df_temp['table_id']=onetable['id']  
+        except: 
+            continue
+            pass
+
+        ## dataset for roster ##
+        if onetable['id']=='roster':      
+            ## for multi index header situation, table layout is different
+            onetable=onetable.find('tbody')
+                
+            names,href=href_extract(onetable, 'player')
+            df_temp['player_href']=href
+            
+            df_temp['college_href']=colleges_href[k]
+            
+            roster=pd.concat([roster,df_temp])
+""" save datasets """            
+with open('college_rosters.pkl', 'wb') as f:
+    pickle.dump(roster, f)
+            
+
+# grab schedule next
+#'https://www.sports-reference.com/cfb/schools/georgia/2020.html'
+#https://www.sports-reference.com/cfb/schools/georgia/2020-schedule.html
+schedule=pd.DataFrame(columns=['G','Date','Time','Day','School','home_away','Opponent','Conf',
+                               'w_l','Pts','Opp','W','L','Streak','Notes','table_id','boxscore_href', 
+                               'opp_href','opp_conf_href','college_href'])
+
+## grab schedule
+for k in range(len(colleges_href)):
+    URL = "https://www.sports-reference.com"+colleges_href[k].replace('.html','-schedule.html')  
+    # grab main url
+    r = requests.get(URL)
+    text=r.content   # get request content
+    
+    # allow all tables to show, replace commented out code blocks
+    text=text.replace(b'<!--',b'')
+    text=text.replace(b'-->',b'')
+    
+    # parse fully viewed page
+    soup = BeautifulSoup(text, 'html.parser')
+    
+    # find all table elements
+    parsed_table = soup.find_all('table')
+    # find all tables
+    df=pd.read_html(text)
+        
+    # loop to get all hrefs and clean up tables
+    for i in range(len(parsed_table)):
+        # check
+        onetable=parsed_table[i]
+        df_temp=df[i]
+        
+        # deal with column names that have multiple headers 
+        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
+            col0=df_temp.columns.get_level_values(0).tolist()
+            col1=df_temp.columns.get_level_values(1).tolist()
+            col_final=[]
+            for x,y in zip(col0,col1):
+                if 'Unnamed' in x:
+                    x=''
+                if 'Unnamed' in y:
+                    y=''
+                if x=='':
+                    col_final.append(x+''+y)
+                else:
+                    col_final.append(x+'_'+y)            
+            df_temp.columns=col_final
+            
+        # retrieves table id
+        try:
+            df_temp['table_id']=onetable['id']  
+        except: 
+            continue
+            pass
+
+        ## dataset for schedule ##
+        if onetable['id']=='schedule':      
+            ## for multi index header situation, table layout is different
+            onetable=onetable.find('tbody')
+                
+            names,href=href_extract(onetable, 'date_game')
+            df_temp['boxscore_href']=href
+            
+            names,href=href_extract(onetable, 'opp_name')
+            df_temp['opp_href']=href
+            
+            names,href=href_extract(onetable, 'conf_abbr')
+            df_temp['opp_conf_href']=href
+
+            df_temp['college_href']=colleges_href[k]
+            
+            if len(df_temp.columns)==19:
+                df_temp.columns=['G','Date','Day','School','home_away','Opponent','Conf',
+                                 'w_l','Pts','Opp','W','L','Streak','Notes','table_id','boxscore_href',
+                                 'opp_href','opp_conf_href','college_href']
+            if len(df_temp.columns)==20:
+                df_temp.columns=['G','Date','Time','Day','School','home_away','Opponent','Conf',
+                             'w_l','Pts','Opp','W','L','Streak','Notes','table_id','boxscore_href',
+                             'opp_href','opp_conf_href','college_href']
+                                    
+            schedule=pd.concat([schedule,df_temp])
+""" save datasets """            
+with open('college_schedule.pkl', 'wb') as f:
+    pickle.dump(schedule, f)
 
 
 
