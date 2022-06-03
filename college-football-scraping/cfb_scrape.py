@@ -409,4 +409,9 @@ with open('college_schedule.pkl', 'wb') as f:
     pickle.dump(schedule, f)
 
 
+## need each player height and weight
+## need every boxscore stat
+
+
+
 
