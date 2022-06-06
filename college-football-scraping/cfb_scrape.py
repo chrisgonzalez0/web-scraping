@@ -408,8 +408,62 @@ for k in range(len(colleges_href)):
 with open('college_schedule.pkl', 'wb') as f:
     pickle.dump(schedule, f)
 
-
 ## need each player height and weight
+## start with player pages first 
+player_hrefs=roster['player_href'].to_list()
+player_hrefs=list(set(player_hrefs))
+player_hrefs=[x for x in player_hrefs if x not in '']
+
+## build dataframe 
+player_stats=pd.DataFrame(player_hrefs)
+player_stats['height']=''
+player_stats['weight']=''
+## grab player page
+for k in range(len(player_hrefs)):
+    URL = "https://www.sports-reference.com"+player_hrefs[k]
+    # grab main url
+    r = requests.get(URL)
+    text=r.content   # get request content
+    
+    # allow all tables to show, replace commented out code blocks
+    text=text.replace(b'<!--',b'')
+    text=text.replace(b'-->',b'')
+    
+    # parse fully viewed page
+    soup = BeautifulSoup(text, 'html.parser')
+
+    # find all table elements
+    parsed_table = soup.find_all('p')
+    height=''
+    weight=''    
+    for x in range(len(parsed_table)):
+        check=parsed_table[x].find_all('span')
+        if len(check)!=0:
+            for j in range(len(check)):
+                if height!='' and weight!='':
+                    break
+
+                if 'height' in str(check[j]).lower():
+                    height=str(check[j])
+                    continue
+                if 'weight' in str(check[j]).lower():
+                    weight=str(check[j])
+                    continue
+        if height!='' and weight!='':
+            break
+    
+    player_stats['height'][k]=height
+    player_stats['weight'][k]=weight
+    
+""" save datasets """            
+with open('college_player_stats.pkl', 'wb') as f:
+    pickle.dump(player_stats, f)
+
+    
+        
+    
+
+
 ## need every boxscore stat
 
 
