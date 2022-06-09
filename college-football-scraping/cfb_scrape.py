@@ -17,8 +17,8 @@ os.chdir('/Users/chrisgonzalez/web-scraping/college-football-scraping/')
 
 # Import web scraping functions 
 sys.path.insert(1, '/Users/chrisgonzalez/web-scraping/functions/')
-from web_scrape_functions import *
-
+from web_scrape_functions import colname_cleanup
+from web_scrape_functions import href_extract
 
 #### years loop to get conferences and main award winners ####
 years=[2020,2019,2018,2017,2016,2015,2014,2013,2012,2011,2010,2009,
@@ -497,7 +497,6 @@ for k in range(len(boxscore_hrefs)):
         df_temp=df[i]
         df_temp=colname_cleanup(df_temp)
         
-
         # retrieves table id
         try:
             print(onetable['id'])
@@ -505,6 +504,15 @@ for k in range(len(boxscore_hrefs)):
         except: 
             continue
             pass
+
+        ## dataset for scoring part 1 ##
+        if onetable['id']=='scoring' and len(df_temp.columns)==16:      
+            ## for multi index header situation, table layout is different
+            onetable=onetable.find('tbody')
+                
+            names,href=href_extract(onetable, 'date_game')
+            df_temp['boxscore_href']=href
+
 
 
 

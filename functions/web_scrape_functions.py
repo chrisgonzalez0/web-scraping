@@ -8,6 +8,15 @@ Created on Thu Jun  9 11:50:34 2022
 from bs4 import BeautifulSoup
 import pandas as pd
 
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import os
+import pickle
+import re
+import sys
+
+
 
 def href_extract(onetable,search_param): 
     """ Input here require a onetable.find('tbody') method """
@@ -52,7 +61,7 @@ def colname_cleanup(df_temp):
         df_temp.columns=col_final
         """ Output is same dataframe as Input,
             with cleaned column names """
-        return df_temp
+    return df_temp
     
 
 
