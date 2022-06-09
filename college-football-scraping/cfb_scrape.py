@@ -467,6 +467,14 @@ with open('college_player_stats.pkl', 'wb') as f:
 
 
 ## need every boxscore stat
+scoring_summary=pd.DataFrame(columns=['Quarter','Time','Team','Description', 
+                                      'away_score','home_score','table_id','scoring_team_href',
+                                      'boxscore_href'])
+passing=pd.DataFrame(columns=['Player','School','Passing_Cmp','Passing_Att','Passing_Pct',
+                              'Passing_Yds','Passing_Y/A','Passing_AY/A','Passing_TD',
+                              'Passing_Int','Passing_Rate','player_href','college_href','boxscore_href'])
+
+
 boxscore_hrefs=schedule['boxscore_href'].to_list()
 boxscore_hrefs=list(set(boxscore_hrefs))
 for k in range(len(boxscore_hrefs)):
@@ -499,7 +507,7 @@ for k in range(len(boxscore_hrefs)):
         
         # retrieves table id
         try:
-            print(onetable['id'])
+            #print(onetable['id'])
             df_temp['table_id']=onetable['id']  
         except: 
             continue
@@ -512,8 +520,32 @@ for k in range(len(boxscore_hrefs)):
                 
             names,href=href_extract(onetable, 'team')
             df_temp['scoring_team_href']=href
+            
+            df_temp['boxscore_href']=boxscore_hrefs[k]
             df_temp.columns=['Quarter','Time','Team','Description', 'away_score', 'home_score',
-                             'table_id','scoring_team_href']
+                             'table_id','scoring_team_href','boxscore_href']
+            
+            scoring_summary=pd.concat([scoring_summary,df_temp])
+            
+        ## dataset for passing ##
+        if onetable['id']=='passing':      
+            ## for multi index header situation, table layout is different
+            onetable=onetable.find('tbody')
+                
+            names,href=href_extract(onetable, 'player')            
+            df_temp=df_temp.loc[df_temp['Player']!='Player',:]
+            df_temp['player_href']=href
+                        
+            names,href=href_extract(onetable, 'school_name')
+            df_temp=df_temp.loc[~df_temp['Player'].isna(),:]
+            df_temp['college_href']=href
+            
+            df_temp['boxscore_href']=boxscore_hrefs[k]
+            passing=pd.concat([passing,df_temp])
+
+
+
+
 
         ## dataset for scoring part 2 ##
         if onetable['id']=='scoring' and len(df_temp.columns)==16:      
@@ -526,10 +558,10 @@ for k in range(len(boxscore_hrefs)):
 
 
 
-scoring
-passing
+scoring - check 
+passing - check 
 rushing_and_receiving
 defense
 returns
 kicking_and_punting
-scoring
+scoring - dont need 
