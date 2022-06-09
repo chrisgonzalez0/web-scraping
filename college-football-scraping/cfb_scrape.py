@@ -11,8 +11,14 @@ import pandas as pd
 import os
 import pickle
 import re
+import sys
 
 os.chdir('/Users/chrisgonzalez/web-scraping/college-football-scraping/')
+
+# Import web scraping functions 
+sys.path.insert(1, '/Users/chrisgonzalez/web-scraping/functions/')
+from web_scrape_functions import *
+
 
 #### years loop to get conferences and main award winners ####
 years=[2020,2019,2018,2017,2016,2015,2014,2013,2012,2011,2010,2009,
@@ -459,13 +465,53 @@ for k in range(len(player_hrefs)):
 with open('college_player_stats.pkl', 'wb') as f:
     pickle.dump(player_stats, f)
 
-    
-        
-    
-
 
 ## need every boxscore stat
+boxscore_hrefs=schedule['boxscore_href'].to_list()
+boxscore_hrefs=list(set(boxscore_hrefs))
+for k in range(len(boxscore_hrefs)):
+    URL = "https://www.sports-reference.com"+boxscore_hrefs[k]
+    # grab main url
+    r = requests.get(URL)
+    text=r.content   # get request content
+    
+    # allow all tables to show, replace commented out code blocks
+    text=text.replace(b'<!--',b'')
+    text=text.replace(b'-->',b'')
+    
+    # parse fully viewed page
+    soup = BeautifulSoup(text, 'html.parser')
+    # find all table elements
+    parsed_table = soup.find_all('table')
+    # find all tables
+    try: 
+        df=pd.read_html(text)
+    except:
+        continue
+        pass
+        
+    # loop to get all hrefs and clean up tables
+    for i in range(len(parsed_table)):
+        # check
+        onetable=parsed_table[i]
+        df_temp=df[i]
+        df_temp=colname_cleanup(df_temp)
+        
+
+        # retrieves table id
+        try:
+            print(onetable['id'])
+            df_temp['table_id']=onetable['id']  
+        except: 
+            continue
+            pass
 
 
 
-
+scoring
+passing
+rushing_and_receiving
+defense
+returns
+kicking_and_punting
+scoring
