@@ -506,6 +506,16 @@ for k in range(len(boxscore_hrefs)):
             pass
 
         ## dataset for scoring part 1 ##
+        if onetable['id']=='scoring' and len(df_temp.columns)==7:      
+            ## for multi index header situation, table layout is different
+            onetable=onetable.find('tbody')
+                
+            names,href=href_extract(onetable, 'team')
+            df_temp['scoring_team_href']=href
+            df_temp.columns=['Quarter','Time','Team','Description', 'away_score', 'home_score',
+                             'table_id','scoring_team_href']
+
+        ## dataset for scoring part 2 ##
         if onetable['id']=='scoring' and len(df_temp.columns)==16:      
             ## for multi index header situation, table layout is different
             onetable=onetable.find('tbody')
