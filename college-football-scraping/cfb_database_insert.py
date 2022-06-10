@@ -56,11 +56,17 @@ conf_awards['player_href']=substr_pandas_col( replace_pandas_col(conf_awards['pl
 
 awards['college_href']=substr_pandas_col( replace_pandas_col(awards['college_href'], '/cfb/schools/', ''), '','/')
 conf_awards['college_href']=substr_pandas_col( replace_pandas_col(conf_awards['college_href'], '/cfb/schools/', ''), '','/')
-
+# insert to postgres
 all_awards=pd.concat([awards,conf_awards])
 all_awards.to_sql('cfb_awards', engine)
 del(all_awards,awards,conf_awards)
 
-
-
+### conference teams data frame ###
+conf_teams=pd.read_pickle('conference_teams.pkl')
+conf_teams['year']=substr_pandas_col( replace_pandas_col(conf_teams['college_href'], '/cfb/schools/', ''), '/','.html')
+conf_teams['college_href']=substr_pandas_col( replace_pandas_col(conf_teams['college_href'], '/cfb/schools/', ''), '','/')
+conf_teams['conference_href']=substr_pandas_col( replace_pandas_col(conf_teams['conference_href'], '/cfb/conferences/', ''), '','/')
+# insert to postgres
+conf_teams.to_sql('cfb_conference_teams',engine)
+del(conf_teams)
 
