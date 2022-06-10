@@ -109,5 +109,24 @@ scoring['boxscore_href']=substr_pandas_col(scoring['boxscore_href'], '/cfb/boxsc
 scoring.to_sql('cfb_scoring_plays',engine)
 del(scoring)
 
+### college passing plays ###
+passing=pd.read_pickle('college_passing.pkl')
+passing['year']=substr_pandas_col( replace_pandas_col(passing['college_href'], '/cfb/schools/', ''), '/','.html')
+passing['college_href']=substr_pandas_col( replace_pandas_col(passing['college_href'], '/cfb/schools/', ''), '','/')
+passing['boxscore_href']=substr_pandas_col(passing['boxscore_href'], '/cfb/boxscores/', '.html')
+passing['player_href']=substr_pandas_col( replace_pandas_col(passing['player_href'], '/cfb/', ''), '/','.html')
+# insert to postgres
+passing.to_sql('cfb_passing',engine)
+del(passing)
+
+### college rush/receiving plays ###
+rush_rec=pd.read_pickle('college_rush_rec.pkl')
+rush_rec['year']=substr_pandas_col( replace_pandas_col(rush_rec['college_href'], '/cfb/schools/', ''), '/','.html')
+rush_rec['college_href']=substr_pandas_col( replace_pandas_col(rush_rec['college_href'], '/cfb/schools/', ''), '','/')
+rush_rec['boxscore_href']=substr_pandas_col(rush_rec['boxscore_href'], '/cfb/boxscores/', '.html')
+rush_rec['player_href']=substr_pandas_col( replace_pandas_col(rush_rec['player_href'], '/cfb/', ''), '/','.html')
+# insert to postgres
+rush_rec.to_sql('cfb_rush_rec',engine)
+del(rush_rec)
 
 
