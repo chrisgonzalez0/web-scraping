@@ -466,18 +466,35 @@ with open('college_player_stats.pkl', 'wb') as f:
     pickle.dump(player_stats, f)
 
 
-## need every boxscore stat
+## suppress warning code
+pd.options.mode.chained_assignment = None  # default='warn'
+## need every boxscore stat ##
 scoring_summary=pd.DataFrame(columns=['Quarter','Time','Team','Description', 
                                       'away_score','home_score','table_id','scoring_team_href',
                                       'boxscore_href'])
 passing=pd.DataFrame(columns=['Player','School','Passing_Cmp','Passing_Att','Passing_Pct',
                               'Passing_Yds','Passing_Y/A','Passing_AY/A','Passing_TD',
-                              'Passing_Int','Passing_Rate','player_href','college_href','boxscore_href'])
-
+                              'Passing_Int','Passing_Rate','table_id','player_href','college_href','boxscore_href'])
+rush_rec=pd.DataFrame(columns=['Player','School','Rushing_Att','Rushing_Yds','Rushing_Avg',
+                               'Rushing_TD','Receiving_Rec','Receiving_Yds','Receiving_Avg',
+                               'Receiving_TD','Scrimmage_Plays','Scrimmage_Yds','Scrimmage_Avg',
+                               'Scrimmage_TD','table_id','player_href','college_href','boxscore_href'])
+defense=pd.DataFrame(columns=['Player','School','Tackles_Solo','Tackles_Ast','Tackles_Tot',
+                              'Tackles_Loss','Tackles_Sk','Def Int_Int','Def Int_Yds',
+                              'Def Int_Avg','Def Int_TD','Def Int_PD','Fumbles_FR','Fumbles_Yds',
+                              'Fumbles_TD','Fumbles_FF','table_id','player_href','college_href','boxscore_href'])
+returns=pd.DataFrame(columns=['Player','School','Kick Ret_Ret','Kick Ret_Yds','Kick Ret_Avg',
+                              'Kick Ret_TD','Punt Ret_Ret','Punt Ret_Yds','Punt Ret_Avg',
+                              'Punt Ret_TD','table_id','player_href','college_href','boxscore_href'])
+kick=pd.DataFrame(columns=['Player','School','Kicking_XPM','Kicking_XPA','Kicking_XP%',
+                           'Kicking_FGM','Kicking_FGA','Kicking_FG%','Kicking_Pts',
+                           'Punting_Punts','Punting_Yds','Punting_Avg','table_id','player_href',
+                           'college_href','boxscore_href'])
 
 boxscore_hrefs=schedule['boxscore_href'].to_list()
 boxscore_hrefs=list(set(boxscore_hrefs))
 for k in range(len(boxscore_hrefs)):
+    print(k)
     URL = "https://www.sports-reference.com"+boxscore_hrefs[k]
     # grab main url
     r = requests.get(URL)
@@ -526,6 +543,7 @@ for k in range(len(boxscore_hrefs)):
                              'table_id','scoring_team_href','boxscore_href']
             
             scoring_summary=pd.concat([scoring_summary,df_temp])
+            continue
             
         ## dataset for passing ##
         if onetable['id']=='passing':      
@@ -534,34 +552,91 @@ for k in range(len(boxscore_hrefs)):
                 
             names,href=href_extract(onetable, 'player')            
             df_temp=df_temp.loc[df_temp['Player']!='Player',:]
-            df_temp['player_href']=href
+            df_temp.loc[:,'player_href']=href
                         
             names,href=href_extract(onetable, 'school_name')
             df_temp=df_temp.loc[~df_temp['Player'].isna(),:]
-            df_temp['college_href']=href
+            df_temp.loc[:,'college_href']=href
             
-            df_temp['boxscore_href']=boxscore_hrefs[k]
+            df_temp.loc[:,'boxscore_href']=boxscore_hrefs[k]
             passing=pd.concat([passing,df_temp])
+            continue            
 
-
-
-
-
-        ## dataset for scoring part 2 ##
-        if onetable['id']=='scoring' and len(df_temp.columns)==16:      
+        ## dataset for rushing/receiving ##
+        if onetable['id']=='rushing_and_receiving':      
             ## for multi index header situation, table layout is different
             onetable=onetable.find('tbody')
-                
-            names,href=href_extract(onetable, 'date_game')
-            df_temp['boxscore_href']=href
+
+            names,href=href_extract(onetable, 'player')            
+            df_temp=df_temp.loc[df_temp['Player']!='Player']
+            df_temp.loc[:,'player_href']=href
+
+            names,href=href_extract(onetable, 'school_name')
+            df_temp=df_temp.loc[~df_temp['Player'].isna(),:]
+            df_temp.loc[:,'college_href']=href
+
+            df_temp.loc[:,'boxscore_href']=boxscore_hrefs[k]            
+            rush_rec=pd.concat([rush_rec,df_temp])
+            continue            
+
+        ## dataset for defense ##
+        if onetable['id']=='defense':      
+            ## for multi index header situation, table layout is different
+            onetable=onetable.find('tbody')
+
+            names,href=href_extract(onetable, 'player')            
+            df_temp=df_temp.loc[df_temp['Player']!='Player',:]
+            df_temp.loc[:,'player_href']=href
+
+            names,href=href_extract(onetable, 'school_name')
+            df_temp=df_temp.loc[~df_temp['Player'].isna(),:]
+            df_temp.loc[:,'college_href']=href
+
+            df_temp.loc[:,'boxscore_href']=boxscore_hrefs[k]            
+            defense=pd.concat([defense,df_temp])
+            continue            
+
+        ## dataset for kick returns ##
+        if onetable['id']=='returns':      
+            ## for multi index header situation, table layout is different
+            onetable=onetable.find('tbody')
+
+            names,href=href_extract(onetable, 'player')            
+            df_temp=df_temp.loc[df_temp['Player']!='Player',:]
+            df_temp.loc[:,'player_href']=href
+
+            names,href=href_extract(onetable, 'school_name')
+            df_temp=df_temp.loc[~df_temp['Player'].isna(),:]
+            df_temp.loc[:,'college_href']=href
+
+            df_temp.loc[:,'boxscore_href']=boxscore_hrefs[k]            
+            returns=pd.concat([returns,df_temp])
+            continue            
+
+        ## dataset for kicking ##
+        if onetable['id']=='kicking_and_punting':      
+            ## for multi index header situation, table layout is different
+            onetable=onetable.find('tbody')
+
+            names,href=href_extract(onetable, 'player')            
+            df_temp=df_temp.loc[df_temp['Player']!='Player',:]
+            df_temp.loc[:,'player_href']=href
+
+            names,href=href_extract(onetable, 'school_name')
+            df_temp=df_temp.loc[~df_temp['Player'].isna(),:]
+            df_temp.loc[:,'college_href']=href
+
+            df_temp.loc[:,'boxscore_href']=boxscore_hrefs[k]            
+            kick=pd.concat([kick,df_temp])
+            continue
 
 
 
 
 scoring - check 
 passing - check 
-rushing_and_receiving
-defense
-returns
-kicking_and_punting
+rushing_and_receiving - check 
+defense - check 
+returns -- check
+kicking_and_punting -- check 
 scoring - dont need 
