@@ -630,6 +630,26 @@ for k in range(len(boxscore_hrefs)):
             kick=pd.concat([kick,df_temp])
             continue
 
+""" save datasets """            
+with open('college_scoring.pkl', 'wb') as f:
+    pickle.dump(scoring_summary, f)
+""" save datasets """            
+with open('college_passing.pkl', 'wb') as f:
+    pickle.dump(passing, f)
+""" save datasets """            
+with open('college_rush_rec.pkl', 'wb') as f:
+    pickle.dump(rush_rec, f)
+""" save datasets """            
+with open('college_defense.pkl', 'wb') as f:
+    pickle.dump(defense, f)
+""" save datasets """            
+with open('college_returns.pkl', 'wb') as f:
+    pickle.dump(returns, f)
+""" save datasets """            
+with open('college_kick.pkl', 'wb') as f:
+    pickle.dump(kick, f)
+
+
 
 
 
