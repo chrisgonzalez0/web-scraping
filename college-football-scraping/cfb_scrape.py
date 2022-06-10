@@ -25,30 +25,6 @@ years=[2020,2019,2018,2017,2016,2015,2014,2013,2012,2011,2010,2009,
        2008,2007,2006,2005,2004,2003,2002,2001]
 
 
-def href_extract(onetable,search_param): 
-    """ Input here require a onetable.find('tbody') method """
-    """ search_param is a text/string """
-    dat1 = onetable.find_all('td', attrs={'data-stat': search_param})
-    dat2 = onetable.find_all('th', attrs={'data-stat': search_param}) 
-    if len(dat1)>len(dat2):
-        dat=dat1
-    else:
-        dat=dat2        
-    # loop here to grab all hrefs    
-    names=[]
-    href=[]
-    for j in range(len(dat)):
-        try:
-            names.append(dat[j].a.get_text())
-            href.append(dat[j].a.get('href'))
-        except:
-            names.append('')
-            href.append('')                        
-            pass
-    return names, href
-
-
-
 conferences=pd.DataFrame(columns=['Rk','Conference','Schs','Overall_G','Overall_W','Overall_L',
                                   'Overall_Pct','Bowls_G','Bowls_W','Bowls_L','Bowls_Pct','SRS_SRS',
                                   'SRS_SOS','Polls_Pre','Polls_Final','Champion','table_id',
@@ -648,15 +624,3 @@ with open('college_returns.pkl', 'wb') as f:
 """ save datasets """            
 with open('college_kick.pkl', 'wb') as f:
     pickle.dump(kick, f)
-
-
-
-
-
-scoring - check 
-passing - check 
-rushing_and_receiving - check 
-defense - check 
-returns -- check
-kicking_and_punting -- check 
-scoring - dont need 

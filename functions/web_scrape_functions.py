@@ -8,15 +8,6 @@ Created on Thu Jun  9 11:50:34 2022
 from bs4 import BeautifulSoup
 import pandas as pd
 
-import requests
-from bs4 import BeautifulSoup
-import pandas as pd
-import os
-import pickle
-import re
-import sys
-
-
 
 def href_extract(onetable,search_param): 
     """ Input here require a onetable.find('tbody') method """
