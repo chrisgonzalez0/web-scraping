@@ -70,3 +70,44 @@ conf_teams['conference_href']=substr_pandas_col( replace_pandas_col(conf_teams['
 conf_teams.to_sql('cfb_conference_teams',engine)
 del(conf_teams)
 
+### college rosters data frame ###
+rosters=pd.read_pickle('college_rosters.pkl')
+rosters['year']=substr_pandas_col( replace_pandas_col(rosters['college_href'], '/cfb/schools/', ''), '/','.html')
+rosters['college_href']=substr_pandas_col( replace_pandas_col(rosters['college_href'], '/cfb/schools/', ''), '','/')
+rosters['player_href']=substr_pandas_col( replace_pandas_col(rosters['player_href'], '/cfb/', ''), '/','.html')
+# insert to postgres
+rosters.to_sql('cfb_rosters',engine)
+del(rosters)
+
+### college player stats ###
+player_stats=pd.read_pickle('college_player_stats.pkl')
+player_stats.columns=['player_href','height','weight']
+player_stats['player_href']=substr_pandas_col( replace_pandas_col(player_stats['player_href'], '/cfb/', ''), '/','.html')
+player_stats['height']=substr_pandas_col(player_stats['height'],'<span itemprop="height">' , '</span>')
+player_stats['weight']=substr_pandas_col(player_stats['weight'],'<span itemprop="weight">' , 'lb</span>')
+# insert to postgres
+player_stats.to_sql('cfb_player_ht_wt',engine)
+del(player_stats)
+
+### college schedules ###
+schedule=pd.read_pickle('college_schedule.pkl')
+schedule['year']=substr_pandas_col( replace_pandas_col(schedule['college_href'], '/cfb/schools/', ''), '/','.html')
+schedule['college_href']=substr_pandas_col( replace_pandas_col(schedule['college_href'], '/cfb/schools/', ''), '','/')
+schedule['opp_href']=substr_pandas_col( replace_pandas_col(schedule['opp_href'], '/cfb/schools/', ''), '','/')
+schedule['boxscore_href']=substr_pandas_col(schedule['boxscore_href'], '/cfb/boxscores/', '.html')
+schedule['opp_conf_href']=substr_pandas_col( replace_pandas_col(schedule['opp_conf_href'], '/cfb/conferences/', ''), '','/')
+# insert to postgres
+schedule.to_sql('cfb_schedule',engine)
+del(schedule)
+
+### college scoring plays ###
+scoring=pd.read_pickle('college_scoring.pkl')
+scoring['year']=substr_pandas_col( replace_pandas_col(scoring['scoring_team_href'], '/cfb/schools/', ''), '/','.html')
+scoring['scoring_team_href']=substr_pandas_col( replace_pandas_col(scoring['scoring_team_href'], '/cfb/schools/', ''), '','/')
+scoring['boxscore_href']=substr_pandas_col(scoring['boxscore_href'], '/cfb/boxscores/', '.html')
+# insert to postgres
+scoring.to_sql('cfb_scoring_plays',engine)
+del(scoring)
+
+
+
