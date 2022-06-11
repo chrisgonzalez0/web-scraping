@@ -129,4 +129,41 @@ rush_rec['player_href']=substr_pandas_col( replace_pandas_col(rush_rec['player_h
 rush_rec.to_sql('cfb_rush_rec',engine)
 del(rush_rec)
 
+### college defense ###
+defense=pd.read_pickle('college_defense.pkl')
+defense['year']=substr_pandas_col( replace_pandas_col(defense['college_href'], '/cfb/schools/', ''), '/','.html')
+defense['college_href']=substr_pandas_col( replace_pandas_col(defense['college_href'], '/cfb/schools/', ''), '','/')
+defense['boxscore_href']=substr_pandas_col(defense['boxscore_href'], '/cfb/boxscores/', '.html')
+defense['player_href']=substr_pandas_col( replace_pandas_col(defense['player_href'], '/cfb/', ''), '/','.html')
+# insert to postgres
+defense.to_sql('cfb_defense',engine)
+del(defense)
+
+### college kick returns ###
+kick_returns=pd.read_pickle('college_returns.pkl')
+kick_returns['year']=substr_pandas_col( replace_pandas_col(kick_returns['college_href'], '/cfb/schools/', ''), '/','.html')
+kick_returns['college_href']=substr_pandas_col( replace_pandas_col(kick_returns['college_href'], '/cfb/schools/', ''), '','/')
+kick_returns['boxscore_href']=substr_pandas_col(kick_returns['boxscore_href'], '/cfb/boxscores/', '.html')
+kick_returns['player_href']=substr_pandas_col( replace_pandas_col(kick_returns['player_href'], '/cfb/', ''), '/','.html')
+# insert to postgres
+kick_returns.to_sql('cfb_kick_returns',engine)
+del(kick_returns)
+
+### college kicking ###
+kicking=pd.read_pickle('college_kick.pkl')
+kicking['year']=substr_pandas_col( replace_pandas_col(kicking['college_href'], '/cfb/schools/', ''), '/','.html')
+kicking['college_href']=substr_pandas_col( replace_pandas_col(kicking['college_href'], '/cfb/schools/', ''), '','/')
+kicking['boxscore_href']=substr_pandas_col(kicking['boxscore_href'], '/cfb/boxscores/', '.html')
+kicking['player_href']=substr_pandas_col( replace_pandas_col(kicking['player_href'], '/cfb/', ''), '/','.html')
+# insert to postgres
+kicking.to_sql('cfb_kicking',engine)
+del(kicking)
+
+
+
+
+
+
+
+
 
