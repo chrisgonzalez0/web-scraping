@@ -12,13 +12,18 @@ import pandas as pd
 import os
 import pickle
 import re
+import sys
 
 os.chdir('/Users/chrisgonzalez/web-scraping/nfl-scraping/')
 
+# Import web scraping functions 
+sys.path.insert(1, '/Users/chrisgonzalez/web-scraping/functions/')
+from web_scrape_functions import colname_cleanup
+from web_scrape_functions import href_extract
 
 
 #### years loop ####
-years=[2020,2019,2018,2017,2016,2015,2014,2013,2012,2011,2010,2009,2008,2007,2006,2005]
+years=[2021]
 
 team_refs=[]
 for yearsi in years:
@@ -48,21 +53,7 @@ for yearsi in years:
         onetable=parsed_table[i]
         df_temp=df[i]
         
-        # deal with column names that have multiple headers 
-        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-            col0=df_temp.columns.get_level_values(0).tolist()
-            col1=df_temp.columns.get_level_values(1).tolist()
-            col_final=[]
-            for x,y in zip(col0,col1):
-                if 'Unnamed' in x:
-                    x=''
-                if 'Unnamed' in y:
-                    y=''
-                if x=='':
-                    col_final.append(x+''+y)
-                else:
-                    col_final.append(x+'_'+y)            
-            df_temp.columns=col_final
+        df_temp=colname_cleanup(df_temp)
         
         # retrieves table id
         df_temp['table_id']=onetable['id']  
@@ -78,36 +69,13 @@ for yearsi in years:
         ## for multi index header situation, table layout is different
         onetable=onetable.find('tbody')
         
-        # table structure logic
-        dat1 = onetable.find_all('td', attrs={'data-stat': 'team'})
-        dat2 = onetable.find_all('th', attrs={'data-stat': 'team'}) 
-        if len(dat1)>len(dat2):
-            dat=dat1
-        else:
-            dat=dat2
+        names,href=href_extract(onetable, 'team')
         
-        
-        """
-        if multiindex_flag==1:
-            dat = onetable.find_all('td', attrs={'data-stat': 'team'}) 
-        else:
-            dat = onetable.find_all('th', attrs={'data-stat': 'team'}) # get all team references
-        """
-        
-        # loop here to grab all href and filter rows to teams    
-        team_names=[]
-        href=[]
-        for j in range(len(dat)):
-            try:
-                team_names.append(dat[j].a.get_text())
-                href.append(dat[j].a.get('href'))
-            except:
-                pass
-        team_names=[sub.replace("\+","") for sub in team_names]
-        team_names=[sub.replace("\*","") for sub in team_names]
+        names=[sub.replace("\+","") for sub in names]
+        names=[sub.replace("\*","") for sub in names]
         
         # filter pandas df to team names and add columns
-        df_temp=df_temp.loc[df_temp['Tm'].isin(team_names),:]
+        df_temp=df_temp.loc[df_temp['Tm'].isin(names),:]
         df_temp['href']=href
         df_temp['year']=yearsi
         team_refs.append(href)
@@ -115,10 +83,10 @@ for yearsi in years:
         years_tables.append(df_temp)
         
         # save years data into python list
-        """
+        
         with open('years_'+str(yearsi)+'.pkl', 'wb') as f:
             pickle.dump(years_tables, f)
-        """
+        
 
 ## save team_refs in case we need to re-grab data
 """
@@ -163,21 +131,9 @@ for tr in range(len(team_refs)):
             continue
             
         df_temp=df[i]        
+        
         # deal with column names that have multiple headers 
-        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-            col0=df_temp.columns.get_level_values(0).tolist()
-            col1=df_temp.columns.get_level_values(1).tolist()
-            col_final=[]
-            for x,y in zip(col0,col1):
-                if 'Unnamed' in x:
-                    x=''
-                if 'Unnamed' in y:
-                    y=''
-                if x=='':
-                    col_final.append(x+''+y)
-                else:
-                    col_final.append(x+'_'+y)            
-            df_temp.columns=col_final
+        df_temp=colname_cleanup(df_temp)
         
         # retrieves table id
         df_temp['table_id']=onetable['id']
@@ -185,25 +141,14 @@ for tr in range(len(team_refs)):
         ## for multi index header situation, table layout is different
         onetable=onetable.find('tbody')
         # table structure logic
-        dat1 = onetable.find_all('td', attrs={'data-stat': 'boxscore_word'})
-        dat2 = onetable.find_all('th', attrs={'data-stat': 'boxscore_word'}) 
-        if len(dat1)>len(dat2):
-            dat=dat1
-        else:
-            dat=dat2
-        # loop here to grab all boxscore href   
-        boxscore_href=[]
-        for j in range(len(dat)):
-            try:
-                boxscore_href.append(dat[j].a.get('href'))
-            except:
-                pass
-        df_temp=df_temp.loc[df_temp['Opp']!='Bye Week',:]
-        df_temp=df_temp.loc[df_temp['Opp'].notna(),:]
+        names,href=href_extract(onetable, 'boxscore_word')
+                                    
+        #df_temp=df_temp.loc[df_temp['Opp']!='Bye Week',:]
+        #df_temp=df_temp.loc[df_temp['Opp'].notna(),:]
         
-        df_temp['boxscore_id']=boxscore_href
+        df_temp['boxscore_id']=href
         df_temp['team_href']=team_refs[tr]
-    box_score_refs.append(boxscore_href)
+    box_score_refs.append(href)
     print(team_refs[tr])
     print(df_temp.shape)
     
@@ -212,10 +157,10 @@ for tr in range(len(team_refs)):
     file_label=file_label.replace('/','_')
     file_label=file_label+'_games'
     
-    """
+    
     with open(file_label+'.pkl', 'wb') as f:
         pickle.dump(df_temp, f)
-    """
+    
 #### schedule loop ends here ####
 
 
@@ -269,7 +214,7 @@ for tr in range(len(team_refs)):
                 break
                 
 """ save data frame of data 
-with open('coaches_gms_refs_upto2020'+'.pkl', 'wb') as f:
+with open('coaches_gms_refs_2021'+'.pkl', 'wb') as f:
     pickle.dump(coaches_gms_refs, f)
 """                
 
@@ -301,20 +246,7 @@ for tr in range(len(team_refs)):
         df_temp=df[i]        
         
         # deal with column names that have multiple headers 
-        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-            col0=df_temp.columns.get_level_values(0).tolist()
-            col1=df_temp.columns.get_level_values(1).tolist()
-            col_final=[]
-            for x,y in zip(col0,col1):
-                if 'Unnamed' in x:
-                    x=''
-                if 'Unnamed' in y:
-                    y=''
-                if x=='':
-                    col_final.append(x+''+y)
-                else:
-                    col_final.append(x+'_'+y)            
-            df_temp.columns=col_final
+        df_temp=colname_cleanup(df_temp)
         
         # retrieves table id
         df_temp['table_id']=onetable['id']
@@ -322,38 +254,24 @@ for tr in range(len(team_refs)):
         ## for multi index header situation, table layout is different
         onetable=onetable.find('tbody')
         # table structure logic
-        dat1 = onetable.find_all('td', attrs={'data-stat': 'player'})
-        dat2 = onetable.find_all('th', attrs={'data-stat': 'player'}) 
-        if len(dat1)>len(dat2):
-            dat=dat1
-        else:
-            dat=dat2
-        # loop here to grab all boxscore href
-        player_name=[]
-        player_href=[]
-        for j in range(len(dat)):
-            try:
-                player_name.append(dat[j].a.get_text())                
-                player_href.append(dat[j].a.get('href'))
-            except:
-                pass
-        
+        names,href=href_extract(onetable, 'player')
+                
         # remove asterisk points
-        player_name=[sub.replace("\+","") for sub in player_name]
-        player_name=[sub.replace("\*","") for sub in player_name]
-        player_name=[sub.strip() for sub in player_name]
+        names=[sub.replace("\+","") for sub in names]
+        names=[sub.replace("\*","") for sub in names]
+        names=[sub.strip() for sub in names]
 
         df_temp['Player']=df_temp['Player'].replace({"\+":""},regex=True)
         df_temp['Player']=df_temp['Player'].replace({"\*":""},regex=True)
         df_temp['Player']=df_temp['Player'].str.strip()
     
         # filter pandas df to player names and add columns
-        df_temp=df_temp.loc[df_temp['Player'].isin(player_name),:]
-        df_temp['player_href']=player_href
+        df_temp=df_temp.loc[df_temp['Player'].isin(names),:]
+        df_temp['player_href']=href
         df_temp['team_href']=team_refs[tr]  
         print(df_temp.shape)
         
-        player_hrefs.append(player_href)   ## to get college_id
+        player_hrefs.append(href)   ## to get college_id
         roster_tables.append(df_temp)      ## save tables into list of tables
                 
     print(team_refs[tr])
@@ -403,18 +321,20 @@ for pr in range(0,len(player_hrefs)):
     print(pr)
     print(player_hrefs[pr])   
 
-with open('player_hrefs_df.pkl', 'wb') as f:
+with open('player_hrefs_df_2021.pkl', 'wb') as f:
     pickle.dump(player_hrefs_df, f)
             
     
 #### box score hrefs
 box_score_refs=[item for sublist in box_score_refs for item in sublist]
 box_score_refs=list(set(box_score_refs))
+box_score_refs=[x for x in box_score_refs if x!='']
+
 """          
 with open('box_score_refs.pkl', 'wb') as f:
     pickle.dump(box_score_refs, f)
 """
-for br in range(4000,len(box_score_refs)):
+for br in range(len(box_score_refs)):
     print(box_score_refs[br])
     boxscore_url="https://www.pro-football-reference.com/"+box_score_refs[br]
     # grab main url
@@ -450,38 +370,13 @@ for br in range(4000,len(box_score_refs)):
                 table_id=onetable['id']
                 print(table_id)
                 # deal with column names that have multiple headers 
-                if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-                    col0=df_temp.columns.get_level_values(0).tolist()
-                    col1=df_temp.columns.get_level_values(1).tolist()
-                    col_final=[]
-                    for x,y in zip(col0,col1):
-                        if 'Unnamed' in x:
-                            x=''
-                        if 'Unnamed' in y:
-                            y=''
-                        if x=='':
-                            col_final.append(x+''+y)
-                        else:
-                            col_final.append(x+'_'+y)            
-                    df_temp.columns=col_final
-                
+                df_temp=colname_cleanup(df_temp)
+                                
                 onetable=onetable.find('tbody')
+                
                 # table structure logic
-                dat1 = onetable.find_all('td', attrs={'data-stat': 'player'})
-                dat2 = onetable.find_all('th', attrs={'data-stat': 'player'}) 
-                if len(dat1)>len(dat2):
-                    dat=dat1
-                else:
-                    dat=dat2
-                # loop here to grab all boxscore href
-                player_name=[]
-                player_href=[]
-                for j in range(len(dat)):
-                    try:
-                        player_name.append(dat[j].a.get_text())                
-                        player_href.append(dat[j].a.get('href'))
-                    except:
-                        pass
+                player_name,player_href=href_extract(onetable, 'player')
+                
                 # remove asterisk points
                 player_name=[sub.replace("\+","") for sub in player_name]
                 player_name=[sub.replace("\*","") for sub in player_name]
@@ -493,6 +388,8 @@ for br in range(4000,len(box_score_refs)):
     
                 # filter pandas df to player names and add columns
                 df_temp=df_temp.loc[df_temp['Player'].isin(player_name),:]
+                player_href=[x for x in player_href if x!='']
+                
                 df_temp['table_id']=table_id
                 df_temp['player_href']=player_href
                 df_temp['box_score_id']=box_score_refs[br]
@@ -506,20 +403,7 @@ for br in range(4000,len(box_score_refs)):
                 table_id=onetable['id']
                 print(table_id)
                 # deal with column names that have multiple headers 
-                if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-                    col0=df_temp.columns.get_level_values(0).tolist()
-                    col1=df_temp.columns.get_level_values(1).tolist()
-                    col_final=[]
-                    for x,y in zip(col0,col1):
-                        if 'Unnamed' in x:
-                            x=''
-                        if 'Unnamed' in y:
-                            y=''
-                        if x=='':
-                            col_final.append(x+''+y)
-                        else:
-                            col_final.append(x+'_'+y)            
-                    df_temp.columns=col_final
+                df_temp=colname_cleanup(df_temp)
                     
                 # filter pandas df to player names and add columns
                 df_temp['table_id']=table_id
