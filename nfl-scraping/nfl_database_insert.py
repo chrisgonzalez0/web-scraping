@@ -17,26 +17,42 @@ os.chdir('/Users/chrisgonzalez/web-scraping/nfl-scraping/')
 files=os.listdir()
 
 
+## functions for data cleaning 
+def replace_pandas_col(col,pattern,replacement):
+    """ col is a pandas column """
+    repl=[str(x).replace(pattern, replacement) for x in col ]
+    return repl
+
+def substr_pandas_col(col,start,end):
+    """ col is a pandas column """
+    split_str = [ re.search(start+'(.*)'+end, x) for x in col ]
+    split_str = [ x.group(1) if x is not None else '' for x in split_str ]
+    return split_str
+
+
 ##### ROSTER DATA (2 Data frames for upload roster1,roster2) #####
-roster_files=[x for x in files if "roster" in x]
+roster_files=[x for x in files if "roster" in x and '2021' in x]
 ## load sample roster files and create empty master data frames
 roster_dfs=pd.read_pickle(roster_files[0])
-roster1_temp=roster_dfs[0]
-roster2_temp=roster_dfs[1]
+#roster1_temp=roster_dfs[0]
+roster2_temp=roster_dfs[0]
 
-roster1=pd.DataFrame(columns=roster1_temp.columns)
+#roster1=pd.DataFrame(columns=roster1_temp.columns)
 roster2=pd.DataFrame(columns=roster2_temp.columns)
 
 for i in range(len(roster_files)):
     roster_dfs=pd.read_pickle(roster_files[i])
-    roster1_temp=roster_dfs[0]
-    roster2_temp=roster_dfs[1]
+    #roster1_temp=roster_dfs[0]
+    roster2_temp=roster_dfs[0]
     
-    roster1=pd.concat([roster1,roster1_temp])
+    #roster1=pd.concat([roster1,roster1_temp])
     roster2=pd.concat([roster2,roster2_temp])
 
-del(roster1_temp,roster2_temp,roster_dfs)  
-  
+#del(roster1_temp)
+del(roster2_temp)
+del(roster_dfs)  
+
+"""  
 roster1.columns=['pos','player','age','yrs','gs','summary_of_player_stats','drafted_tm_rnd_yr','table_id','player_href','team_href']
 ## player id
 split_str=[str(x).replace("/players/", "") for x in roster1['player_href'] ]
@@ -53,36 +69,27 @@ split_str=[str(x).replace("/teams", "") for x in roster1['team_href'] ]
 split_str = [ re.search('/(.*)/', x) for x in split_str ]
 split_str=[ x.group(1) for x in split_str ]
 roster1['team_id']=split_str
-
+"""
 
 roster2.columns=['number','player','age','pos','g','gs','wt','ht','college_univ','birthdate','yrs','av',
-                 'drafted_tm_rnd_yr','salary','table_id','player_href','team_href']
+                 'drafted_tm_rnd_yr','table_id','player_href','team_href']
 ## player id
-split_str=[str(x).replace("/players/", "") for x in roster2['player_href'] ]
-split_str = [ re.search('/(.*).htm', x) for x in split_str ]
-split_str=[ x.group(1) for x in split_str ]
-roster2['player_id']=split_str
+roster2['player_id']=substr_pandas_col(replace_pandas_col(roster2['player_href'], '/players/', '') ,'/','.htm')
+
 ## year
-split_str=[str(x).replace("/teams/", "") for x in roster2['team_href'] ]
-split_str = [ re.search('/(.*).htm', x) for x in split_str ]
-split_str=[ x.group(1) for x in split_str ]
-roster2['year']=split_str
+roster2['year']=substr_pandas_col(replace_pandas_col(roster2['team_href'], '/teams/', '') ,'/','.htm')
+
 ## team id 
-split_str=[str(x).replace("/teams", "") for x in roster2['team_href'] ]
-split_str = [ re.search('/(.*)/', x) for x in split_str ]
-split_str=[ x.group(1) for x in split_str ]
-roster2['team_id']=split_str
+roster2['team_id']=substr_pandas_col(replace_pandas_col(roster2['team_href'], '/teams', '') ,'/','/')
 ############################################################################
 
 
 ###### player to college map ######
-ph = pd.read_pickle('player_hrefs_df.pkl')
+ph = pd.read_pickle('player_hrefs_df_2021.pkl')
 ph.columns=['player_href','college_href']
 ## player id
-split_str=[str(x).replace("/players/", "") for x in ph['player_href'] ]
-split_str = [ re.search('/(.*).htm', x) for x in split_str ]
-split_str=[ x.group(1) for x in split_str ]
-ph['player_id']=split_str
+ph['player_id']=substr_pandas_col(replace_pandas_col(ph['player_href'] , '/players/', '') ,'/','.htm')
+
 ## college id
 split_str=[str(x).replace("<a href=\"https://www.sports-reference.com/cfb/players", "") for x in ph['college_href'] ]
 split_str = [ re.search('/(.*).htm', x) for x in split_str ]
@@ -93,7 +100,7 @@ ph['college_id'][ph['college_href']!=''] =split_str
 
 
 ###### summary of every year data ######
-years_files=[x for x in files if "years" in x]
+years_files=[x for x in files if "years" in x and '2021' in x]
 year_dfs=pd.read_pickle(years_files[0])
 
 years=pd.DataFrame(columns=['Tm','W','L','W-L%','PF','PA','PD','MoV',
@@ -105,15 +112,12 @@ for i in range(len(years_files)):
     years=pd.concat([years,years_dfs[1]])
 
 ## team id 
-split_str=[str(x).replace("/teams", "") for x in years['href'] ]
-split_str = [ re.search('/(.*)/', x) for x in split_str ]
-split_str=[ x.group(1) for x in split_str ]
-years['team_id']=split_str
+years['team_id']=substr_pandas_col(replace_pandas_col(years['href'] , '/teams', '') ,'/','/')
 ############################################################################
     
 
 ###### schedule data ######
-games_files=[x for x in files if "games" in x]
+games_files=[x for x in files if "games" in x and '2021' in x]
 #games_dfs=pd.read_pickle(games_files[0])
 schedule=pd.DataFrame(columns=['Week','Day','Date','time','label','outcome','OT','Rec','home_away','Opp','Score_Tm','Score_Opp','Offense_1stD','Offense_TotYd',
  'Offense_PassY','Offense_RushY','Offense_TO','Defense_1stD','Defense_TotYd','Defense_PassY','Defense_RushY',
@@ -127,26 +131,22 @@ for i in range(len(games_files)):
                    'Defense_TO','Expected Points_Offense','Expected Points_Defense','Expected Points_Sp. Tms','table_id','boxscore_href','team_href']
     schedule=pd.concat([schedule,games])
 ## team id 
-split_str=[str(x).replace("/teams", "") for x in schedule['team_href'] ]
-split_str = [ re.search('/(.*)/', x) for x in split_str ]
-split_str=[ x.group(1) for x in split_str ]
-schedule['team_id']=split_str
+schedule['team_id']=substr_pandas_col(replace_pandas_col(schedule['team_href'] , '/teams', '') ,'/','/')
+
 ## year
-split_str=[str(x).replace("/teams/", "") for x in schedule['team_href'] ]
-split_str = [ re.search('/(.*).htm', x) for x in split_str ]
-split_str=[ x.group(1) for x in split_str ]
-schedule['year']=split_str
+schedule['year']=substr_pandas_col(replace_pandas_col(schedule['team_href'] , '/teams/', '') ,'/','.htm')
+
 ## boxscore_id
-split_str=[str(x).replace("/boxscores", "") for x in schedule['boxscore_href'] ]
-split_str = [ re.search('/(.*).htm', x) for x in split_str ]
-split_str=[ x.group(1) for x in split_str ]
-schedule['boxscore_id']=split_str
+schedule['boxscore_id']=substr_pandas_col(replace_pandas_col(schedule['boxscore_href'] , '/boxscores', '') ,'/','.htm')
 ############################################################################
 
 
 ###### boxscore data ######
 ## offense, defemse, kick return, kicks, starters, snapcount, play by play ##
-files=os.listdir('boxscores')
+#files=os.listdir('boxscores')
+files=[x for x in files if "boxscores" in x ]
+files=[x for x in files if x!='boxscores']
+
 offense=pd.DataFrame(columns=['Player','Tm','Passing_Cmp','Passing_Att','Passing_Yds',
                               'Passing_TD','Passing_Int','Passing_Sk','Passing_Yds.1',
                               'Passing_Lng','Passing_Rate','Rushing_Att','Rushing_Yds',
@@ -174,7 +174,7 @@ pbp=pd.DataFrame(columns=['Quarter','Time','Down','ToGo','Location','Detail','aw
 
 for i in range(len(files)):
     print(files[i])
-    box=pd.read_pickle('boxscores/'+files[i])
+    box=pd.read_pickle(files[i])
     
     for j in range(len(box)):
         
@@ -202,6 +202,9 @@ for i in range(len(files)):
             pbp=pd.concat([pbp,box[j]])
 ############################################################################
 
+## need to add coaches gms etc
+
+############################################################################
 
 ## clean data sets and formats
 offense['Passing_Cmp']=offense['Passing_Cmp'].astype(float)
@@ -214,24 +217,29 @@ import psycopg2
 engine = create_engine('postgresql://postgres:estarguars@localhost:5432/postgres')
 
 ## roster 1
-roster1.to_sql('team_starters', engine)
+#roster1.to_sql('team_starters', engine)
 ## roster 2
-roster2.to_sql('team_rosters',engine)
+roster2.to_sql('nfl_team_rosters',engine,if_exists='append',index=False)
 ## player key 
-ph.to_sql('player_keys',engine)
+keys=engine.execute('select distinct player_id from player_keys')
+keys=[x[0] for x in keys]
+ph=ph[~ph.player_id.isin(keys)]
+
+ph.to_sql('player_keys',engine,if_exists='append',index=False)
+
 ## year_summaries
-years.to_sql('year_summaries',engine)
+years.to_sql('nfl_year_summaries',engine,if_exists='append',index=False)
 ## team schedules
-schedule.to_sql('team_schedules',engine)
+schedule.to_sql('nfl_team_schedules',engine,if_exists='append',index=False)
 ## team boxscores
-offense.to_sql('boxscore_offense',engine)
-defense.to_sql('boxscore_defense',engine)
-kick_return.to_sql('boxscore_kick_returns',engine)
-kicking.to_sql('boxscore_kicking',engine)
+offense.to_sql('nfl_boxscore_offense',engine,if_exists='append',index=False)
+defense.to_sql('nfl_boxscore_defense',engine,if_exists='append',index=False)
+kick_return.to_sql('nfl_boxscore_kick_returns',engine,if_exists='append',index=False)
+kicking.to_sql('nfl_boxscore_kicking',engine,if_exists='append',index=False)
 
 ## team stats
-starters.to_sql('boxscore_starters',engine)
-snapcount.to_sql('boxscore_snapcount',engine)
+starters.to_sql('nfl_boxscore_starters',engine,if_exists='append',index=False)
+snapcount.to_sql('nfl_boxscore_snapcount',engine,if_exists='append',index=False)
 
 ## play by play 
 pbp['Quarter']=pbp['Quarter'].astype('string')
@@ -244,7 +252,7 @@ pbp=pbp.loc[ pbp['Quarter']!='End of Regulation'  , : ]
 pbp=pbp.loc[ pbp['Quarter']!='End of Overtime'  , : ] 
 pbp=pbp.loc[ pbp['Quarter']!='OT'  , : ] 
 pbp=pbp.loc[ pbp['Quarter']!='Overtime'  , : ] 
-pbp.to_sql('boxscore_pbp',engine)
+pbp.to_sql('nfl_boxscore_pbp',engine,if_exists='append',index=False)
 
 
 
