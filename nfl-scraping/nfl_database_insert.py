@@ -203,7 +203,20 @@ for i in range(len(files)):
 ############################################################################
 
 ## need to add coaches gms etc
+cgm_2020=pd.read_pickle('coaches_gms_refs_upto2020.pkl')
+cgm_2021=pd.read_pickle('coaches_gms_refs_2021.pkl')
 
+cgm_2020['name']=substr_pandas_col(cgm_2020['values'],'>','<')
+cgm_2020['key']=substr_pandas_col( replace_pandas_col(cgm_2020['values'],'<a href="/','') ,'/','.htm')
+cgm_2020['year']=substr_pandas_col( replace_pandas_col(cgm_2020['team'],'/teams/','') ,'/','.htm')
+cgm_2020['team']=substr_pandas_col( replace_pandas_col(cgm_2020['team'],'/teams/','') ,'','/')
+
+cgm_2021['name']=substr_pandas_col(cgm_2021['values'],'>','<')
+cgm_2021['key']=substr_pandas_col( replace_pandas_col(cgm_2021['values'],'<a href="/','') ,'/','.htm')
+cgm_2021['year']=substr_pandas_col( replace_pandas_col(cgm_2021['team'],'/teams/','') ,'/','.htm')
+cgm_2021['team']=substr_pandas_col( replace_pandas_col(cgm_2021['team'],'/teams/','') ,'','/')
+
+cgm=pd.concat([cgm_2020,cgm_2021])
 ############################################################################
 
 ## clean data sets and formats
@@ -254,7 +267,8 @@ pbp=pbp.loc[ pbp['Quarter']!='OT'  , : ]
 pbp=pbp.loc[ pbp['Quarter']!='Overtime'  , : ] 
 pbp.to_sql('nfl_boxscore_pbp',engine,if_exists='append',index=False)
 
-
+## coaches/gms/team info
+cgm.to_sql('nfl_coach_gm_team',engine,if_exists='append',index=False)
 
 
 
