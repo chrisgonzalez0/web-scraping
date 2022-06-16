@@ -21,8 +21,7 @@ from web_scrape_functions import colname_cleanup
 from web_scrape_functions import href_extract
 
 #### years loop to get conferences and main award winners ####
-years=[2020,2019,2018,2017,2016,2015,2014,2013,2012,2011,2010,2009,
-       2008,2007,2006,2005,2004,2003,2002,2001]
+years=[2021]
 
 
 conferences=pd.DataFrame(columns=['Rk','Conference','Schs','Overall_G','Overall_W','Overall_L',
@@ -58,20 +57,7 @@ for yearsi in years:
         df_temp=df[i]
         
         # deal with column names that have multiple headers 
-        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-            col0=df_temp.columns.get_level_values(0).tolist()
-            col1=df_temp.columns.get_level_values(1).tolist()
-            col_final=[]
-            for x,y in zip(col0,col1):
-                if 'Unnamed' in x:
-                    x=''
-                if 'Unnamed' in y:
-                    y=''
-                if x=='':
-                    col_final.append(x+''+y)
-                else:
-                    col_final.append(x+'_'+y)            
-            df_temp.columns=col_final
+        df_temp=colname_cleanup(df_temp)
         
         # retrieves table id
         try:
@@ -159,20 +145,7 @@ for k in range(len(conf_hrefs)):
         df_temp=df[i]
         
         # deal with column names that have multiple headers 
-        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-            col0=df_temp.columns.get_level_values(0).tolist()
-            col1=df_temp.columns.get_level_values(1).tolist()
-            col_final=[]
-            for x,y in zip(col0,col1):
-                if 'Unnamed' in x:
-                    x=''
-                if 'Unnamed' in y:
-                    y=''
-                if x=='':
-                    col_final.append(x+''+y)
-                else:
-                    col_final.append(x+'_'+y)            
-            df_temp.columns=col_final
+        df_temp=colname_cleanup(df_temp)
             
         # retrieves table id
         try:
@@ -267,20 +240,7 @@ for k in range(len(colleges_href)):
         df_temp=df[i]
         
         # deal with column names that have multiple headers 
-        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-            col0=df_temp.columns.get_level_values(0).tolist()
-            col1=df_temp.columns.get_level_values(1).tolist()
-            col_final=[]
-            for x,y in zip(col0,col1):
-                if 'Unnamed' in x:
-                    x=''
-                if 'Unnamed' in y:
-                    y=''
-                if x=='':
-                    col_final.append(x+''+y)
-                else:
-                    col_final.append(x+'_'+y)            
-            df_temp.columns=col_final
+        df_temp=colname_cleanup(df_temp)
             
         # retrieves table id
         try:
@@ -338,20 +298,7 @@ for k in range(len(colleges_href)):
         df_temp=df[i]
         
         # deal with column names that have multiple headers 
-        if str(type(df_temp.columns))=="<class 'pandas.core.indexes.multi.MultiIndex'>":
-            col0=df_temp.columns.get_level_values(0).tolist()
-            col1=df_temp.columns.get_level_values(1).tolist()
-            col_final=[]
-            for x,y in zip(col0,col1):
-                if 'Unnamed' in x:
-                    x=''
-                if 'Unnamed' in y:
-                    y=''
-                if x=='':
-                    col_final.append(x+''+y)
-                else:
-                    col_final.append(x+'_'+y)            
-            df_temp.columns=col_final
+        df_temp=colname_cleanup(df_temp)
             
         # retrieves table id
         try:
@@ -401,7 +348,7 @@ player_stats=pd.DataFrame(player_hrefs)
 player_stats['height']=''
 player_stats['weight']=''
 ## grab player page
-for k in range(len(player_hrefs)):
+for k in range(14588,len(player_hrefs)):
     URL = "https://www.sports-reference.com"+player_hrefs[k]
     # grab main url
     r = requests.get(URL)
