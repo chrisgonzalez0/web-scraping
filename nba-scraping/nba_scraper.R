@@ -5,8 +5,8 @@ library(RCurl)
 # Set Up Vars #
 # zz=1
 # year=c("2017")
-
-year=seq(2019,2020,by=1)
+y
+year=seq(2009,2022,by=1)
 year=as.character(year)
 
 final_data=data.frame()
@@ -20,7 +20,7 @@ for(zz in 1:length(year)){
   tabs=getURL(url)  
   read=readHTMLTable(tabs)
   
-  link=paste(readLines(paste("http://www.basketball-reference.com/leagues/NBA_",year[zz],".html",sep="")),collapse=" ")
+  link=paste(readLines(paste("http://www.basketball-reference.com/leagues/NBA_",year[zz],".html",sep=""),encoding = "UTF-8"),collapse=" ")
   
   # Parse Data Set #
   east=read[[1]]
@@ -66,7 +66,7 @@ final_data=rbind(final_data,data)
 # Roster Information based on 'final' data 
 roster=data.frame()
 for(i in 1:nrow(final_data)){
-  
+  print(i)
   url=paste("https://www.basketball-reference.com/teams/",final_data$team_id[i],"/",final_data$year[i],".html",sep="")
   tabs=getURL(url)  
   
@@ -74,12 +74,13 @@ for(i in 1:nrow(final_data)){
   
   rosters=read[[1]]
   
-  link=paste(readLines(paste("https://www.basketball-reference.com/teams/",final_data$team_id[i],"/",final_data$year[i],".html",sep="")),collapse=" ")
+  link=paste(readLines(paste("https://www.basketball-reference.com/teams/",final_data$team_id[i],"/",final_data$year[i],".html",sep=""),encoding = "UTF-8"),collapse=" ")
   
   # Characters to Search in text
   
   check=unlist(gregexpr("all_roster",link))
   
+  Sys.sleep(2)
   link=substr(link,check,nchar(link))
   
   char1="\\players"
@@ -106,7 +107,7 @@ for(i in 1:nrow(final_data)){
   rosters$team_id=final_data$team_id[i]
   
   # Combine roster data 
-  colnames(rosters)=colnames(roster)
+  #colnames(rosters)=colnames(roster)
   roster=rbind(roster,rosters)
 }
 
