@@ -1,11 +1,8 @@
-# setwd("H:/Downloads/basketball/")
+setwd("/Users/chrisgonzalez/Documents/web-scraping/nba-scraping/")
 
 library(XML)
 library(RCurl)
 # Set Up Vars #
-# zz=1
-# year=c("2017")
-y
 year=seq(2009,2022,by=1)
 year=as.character(year)
 
@@ -80,7 +77,6 @@ for(i in 1:nrow(final_data)){
   
   check=unlist(gregexpr("all_roster",link))
   
-  Sys.sleep(2)
   link=substr(link,check,nchar(link))
   
   char1="\\players"
@@ -111,14 +107,14 @@ for(i in 1:nrow(final_data)){
   roster=rbind(roster,rosters)
 }
 
-colnames(roster)=c("number","name","pos","height","weight","bday","country","yrs_pro","school","id","year","team")
+colnames(roster)=c("number","name","pos","height","weight","bday","country","yrs_pro","school","id","year","team_id")
 
 roster$id=substr(roster$id,3,nchar(roster$id))
 
 
 ## Save Datasets as a safety
-save(roster,file="nba_roster.RData")
-save(final_data,file="nba_teams.RData")
+save(roster,file="r-data/nba_roster.RData")
+save(final_data,file="r-data/nba_teams.RData")
 
 ## Extract schedules of all teams
 schedule=data.frame()
