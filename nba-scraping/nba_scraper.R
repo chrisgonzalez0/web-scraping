@@ -194,7 +194,7 @@ for(i in 1:nrow(final_data)){
 }
 
 # Save schedule data locally  
-save(temp,file="nba_schedules.RData")
+save(temp,file="r-data/nba_schedules.RData")
 
 ## Create a 'player key' as the website often has different spellings
 ## for player names, this key serves as a way to standardize all data across
