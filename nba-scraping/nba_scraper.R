@@ -206,6 +206,7 @@ colnames(p)=c("name","id","first_letter")
 
 player_key=data.frame()
 for(i in 1:nrow(p)){
+  print(i)
   url=paste("https://www.basketball-reference.com/players/",p$first_letter[i],"/",p$id[i],".html",sep="")
   tabs=getURL(url)  
   read=readHTMLTable(tabs)
@@ -219,7 +220,7 @@ for(i in 1:nrow(p)){
   start=unlist(gregexpr(char1,link))
   stops=unlist(gregexpr(char2,link))
   
-  if(start!=-1){
+  if(start[1]!=-1){
   xx=merge(start,stops)
   xx$logic=(xx$x < xx$y)*1
   xx=xx[xx$logic==1,]
@@ -243,7 +244,7 @@ for(i in 1:nrow(p)){
   start=unlist(gregexpr(char1,link))
   stops=unlist(gregexpr(char2,link))
   
-  if(start!=-1){
+  if(start[1]!=-1){
   xx=merge(start,stops)
   xx$logic=(xx$x < xx$y)*1
   xx=xx[xx$logic==1,]
@@ -268,7 +269,7 @@ for(i in 1:nrow(p)){
 }  
 
 ## Save player key locally
-save(player_key,file="nba_player_key.RData")  
+save(player_key,file="r-data/nba_player_key.RData")  
 
 ## Reload all saved temp data because the 
 ## box score scrape takes the longest
@@ -333,10 +334,10 @@ id=unique(id)
   boxscores=rbind(boxscores,temp1,temp2)
   ## Clear memory and log loops to diagnose speed
   gc()
-  print(Sys.time())
+  print(i)
   
   ## for every 5000 rows, save down the data set because larger datasets slow performance
-  if(i%%5000==0){
+  if(i%%50000==0){
     save(boxscores,file=paste("nba_box_scores",i,".RData",sep=""))
     boxscores=data.frame()
   }
