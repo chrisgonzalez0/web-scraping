@@ -273,10 +273,10 @@ save(player_key,file="r-data/nba_player_key.RData")
 
 ## Reload all saved temp data because the 
 ## box score scrape takes the longest
-load("nba_roster.RData")
-load("nba_teams.RData")
-load("nba_schedules.RData")
-load("nba_player_key.RData")
+load("r-data/nba_roster.RData")
+load("r-data/nba_teams.RData")
+load("r-data/nba_schedules.RData")
+load("r-data/nba_player_key.RData")
 
 # Scrpae games uniquely since they would be doubled across all schedules
 # in the schedules data
@@ -337,23 +337,11 @@ id=unique(id)
   print(i)
   
   ## for every 5000 rows, save down the data set because larger datasets slow performance
-  if(i%%50000==0){
-    save(boxscores,file=paste("nba_box_scores",i,".RData",sep=""))
+  if(i%%3000==0 | i==length(games)){
+    save(boxscores,file=paste("r-data/nba_box_scores",i,".RData",sep=""))
     boxscores=data.frame()
   }
-  
-  }  
-
-## re-save all data locally in the git repo
-save(boxscores,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/boxscores.RData")
-save(roster,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/roster.RData")
-save(final_data,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/teams.RData")
-save(temp,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/schedules.RData")
-save(player_key,file="/Users/chrisgonzalez/web-scraping/nba-scraping/r-data/player_key.RData")
-
+}
 
 # Example URL 
 # https://www.basketball-reference.com/boxscores/201706120GSW.html
-  
-  
-  
