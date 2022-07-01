@@ -1,51 +1,58 @@
+setwd("/Users/chrisgonzalez/web-scraping/college_basketball_scraper/")
 
 library(XML)
 library(RCurl)
+
 # Set Up Vars #
-zz=1
-year=c("2019")
+year=seq(2005,2022)
+years_df=data.frame()
 
-## Scrape Seasons to pull back detail list fo schools ##
-url <- paste("https://www.sports-reference.com/cbb/seasons/",year[zz],"-school-stats.html",sep="")
-tabs <- getURL(url)
-read <- readHTMLTable(tabs, stringsAsFactors = F)
-
-teams=read$basic_school_stats
-teams$tourney=""
-# Older years have an asterisk
-# teams$tourney[grep("\\*",as.character(teams$School))]="Y"
-# teams$School=gsub("\\*","",as.character(teams$School))
-teams$tourney[grep("NCAA",as.character(teams$School))]="Y"
-teams$School=gsub("NCAA","",as.character(teams$School))
-
-teams=teams[!(teams$School %in% c("Overall","School")),]
-
-## Create PK ##
-link=paste(readLines(paste("http://www.sports-reference.com/cbb/seasons/",year[zz],"-school-stats.html",sep="")),collapse=" ")
-
-start=unlist(gregexpr("data-stat=\"school_name\" ><a href='/cbb/schools/",link))
-stops=unlist(gregexpr(paste("/",year[zz],".html",sep=""),link))
-
-xx=merge(start,stops)
-xx$logic=(xx$x < xx$y)*1
-xx=xx[xx$logic==1,]
-xx$rank = ave (xx$y, xx$x, FUN = function(x) rank (x, ties.method ="min"))
-xx=xx[xx$rank==1,]
-
-id=c()
-for(i in 1:nrow(xx)){
-  test=substr(link,xx$x[i]+47,xx$y[i]-1)
-  id=c(id,test)
+for(zz in 1:length(year)){
+  print(zz)
+  ## Scrape Seasons to pull back detail list fo schools ##
+  url <- paste("https://www.sports-reference.com/cbb/seasons/",year[zz],"-school-stats.html",sep="")
+  tabs <- getURL(url)
+  read <- readHTMLTable(tabs, stringsAsFactors = F)
   
+  teams=read$basic_school_stats
+  teams$tourney=""
+  # Older years have an asterisk
+  # teams$tourney[grep("\\*",as.character(teams$School))]="Y"
+  # teams$School=gsub("\\*","",as.character(teams$School))
+  teams$tourney[grep("NCAA",as.character(teams$School))]="Y"
+  teams$School=gsub("NCAA","",as.character(teams$School))
+  
+  teams=teams[!(teams$School %in% c("Overall","School")),]
+  
+  ## Create PK ##
+  link=paste(readLines(paste("http://www.sports-reference.com/cbb/seasons/",year[zz],"-school-stats.html",sep="")),collapse=" ")
+  
+  start=unlist(gregexpr("data-stat=\"school_name\" ><a href='/cbb/schools/",link))
+  stops=unlist(gregexpr(paste("/",year[zz],".html",sep=""),link))
+  
+  xx=merge(start,stops)
+  xx$logic=(xx$x < xx$y)*1
+  xx=xx[xx$logic==1,]
+  xx$rank = ave (xx$y, xx$x, FUN = function(x) rank (x, ties.method ="min"))
+  xx=xx[xx$rank==1,]
+  
+  id=c()
+  for(i in 1:nrow(xx)){
+    test=substr(link,xx$x[i]+47,xx$y[i]-1)
+    id=c(id,test)
+    
+  }
+  teams$id=id
+  teams$year=year[zz]
+  teams=teams[ , colnames(teams)[make.names(colnames(teams))!="X."] ]
+  teams$School=gsub("'","''",teams$School)
+  teams$School=paste("'",teams$School,"'",sep="")
+  teams$tourney=paste("'",teams$tourney,"'",sep="")
+  teams$id=paste("'",teams$id,"'",sep="")
+  
+  years_df=rbind(years_df,teams)
 }
-teams$id=id
-teams$year=year[zz]
-teams=teams[,-17]
-teams$School=gsub("'","''",teams$School)
-teams$School=paste("'",teams$School,"'",sep="")
-teams$tourney=paste("'",teams$tourney,"'",sep="")
-teams$id=paste("'",teams$id,"'",sep="")
-
+  
 # Write into postgres db
 # library(RPostgreSQL)
 # drv=dbDriver("PostgreSQL")
@@ -60,15 +67,19 @@ teams$id=paste("'",teams$id,"'",sep="")
 
 ## Rosters 
 rosters=data.frame()
-for(i in 1:nrow(teams)){
+for(i in 1:nrow(years_df)){
+  print(i)
   
-  url <- paste("https://www.sports-reference.com/cbb/schools/",gsub("'","",teams$id[i]),"/",year[zz],".html",sep="")
+  url <- paste("https://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],".html",sep="")
   tabs <- getURL(url)
   read <- readHTMLTable(tabs, stringsAsFactors = F)
+  if(length(read)==0){
+    next
+    }
   
   #read=readHTMLTable(paste("http://www.sports-reference.com/cbb/schools/",gsub("'","",teams$id[i]),"/",year[zz],".html",sep=""))  
   roster=read$roster
-  link=paste(readLines(paste("http://www.sports-reference.com/cbb/schools/",gsub("'","",teams$id[i]),"/",year[zz],".html",sep="")),collapse=" ")  
+  link=paste(readLines(paste("http://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],".html",sep="")),collapse=" ")  
   
   #link <- gsub("<U\\+[0-9A-F]{4}>", "\u03B2", link)
   #Encoding(link) <- "UTF-8"
@@ -94,18 +105,16 @@ for(i in 1:nrow(teams)){
   }
   id=unique(id)
   roster$id=id[1:nrow(roster)]
-  roster$team=teams$id[i]
-  roster$year=year[zz]
+  roster$team=years_df$id[i]
+  roster$year=years_df$year[i]
   
   roster=roster[,c("Player","#","Class","Pos","Height","Weight","Hometown",
-                   "High School","Summary","id","team","year" )]
+                   "id","team","year" )]
   
   rosters=rbind(rosters,roster)  
   
   gc()  
 }
-
-rosters$year=year[zz]
 
 rosters$Player=gsub("'","",rosters$Player)
 rosters$Player=paste("'",rosters$Player,"'",sep="")
@@ -116,8 +125,8 @@ rosters$Summary=paste("'",rosters$Summary,"'",sep="")
 rosters$id=paste("'",rosters$id,"'",sep="")
 # rosters$team=paste("'",rosters$team,"'",sep="")
 
-save(rosters,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/2019_rosters.RData")
-save(teams,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/2019_teams.RData")
+save(rosters,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/cbb_rosters.RData")
+save(teams,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/cbb_teams.RData")
 
 # Roster Inserts
 # library(DBI)
