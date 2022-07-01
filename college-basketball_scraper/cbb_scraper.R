@@ -67,7 +67,7 @@ for(zz in 1:length(year)){
 
 ## Rosters 
 rosters=data.frame()
-for(i in 1:nrow(years_df)){
+for(i in 5417:nrow(years_df)){
   print(i)
   
   url <- paste("https://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],".html",sep="")
@@ -121,12 +121,11 @@ rosters$Player=paste("'",rosters$Player,"'",sep="")
 rosters$Class=paste("'",rosters$Class,"'",sep="")
 rosters$Pos=paste("'",rosters$Pos,"'",sep="")
 rosters$Height=paste("'",rosters$Height,"'",sep="")
-rosters$Summary=paste("'",rosters$Summary,"'",sep="")
 rosters$id=paste("'",rosters$id,"'",sep="")
 # rosters$team=paste("'",rosters$team,"'",sep="")
 
-save(rosters,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/cbb_rosters.RData")
-save(teams,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/cbb_teams.RData")
+save(rosters,file="r-data/cbb_rosters.RData")
+save(years_df,file="r-data/cbb_teams_years.RData")
 
 # Roster Inserts
 # library(DBI)
@@ -145,9 +144,9 @@ save(teams,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-
 
 ## Schedules
 schedules=data.frame()
-for(i in 1:nrow(teams)){
+for(i in 1:nrow(years_df)){
   
-  url <- paste("https://www.sports-reference.com/cbb/schools/",gsub("'","",teams$id[i]),"/",year[zz],"-schedule.html",sep="")
+  url <- paste("https://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],"-schedule.html",sep="")
   tabs <- getURL(url)
   read <- readHTMLTable(tabs, stringsAsFactors = F)
   
@@ -155,7 +154,7 @@ for(i in 1:nrow(teams)){
   schedule=read$schedule
   schedule=schedule[schedule$Date!="Date",]
   schedule$team_id=teams$id[i]
-  link=paste(readLines(paste("http://www.sports-reference.com/cbb/schools/",gsub("'","",teams$id[i]),"/",year[zz],"-schedule.html",sep="")),collapse=" ")  
+  link=paste(readLines(paste("http://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],"-schedule.html",sep="")),collapse=" ")  
   
   ## Box Id's ##
   start=unlist(gregexpr("><a href=\"/cbb/boxscores/",link))
