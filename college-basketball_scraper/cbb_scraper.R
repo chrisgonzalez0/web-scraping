@@ -232,7 +232,7 @@ save(schedules,file="r-data/cbb_schedules.RData")
 
 count=1
 box=data.frame()
-for(i in 667:nrow(schedules)){
+for(i in 1:nrow(schedules)){
   url <- paste("https://www.sports-reference.com/cbb/boxscores/",gsub("'","",schedules$id[i]),".html",sep="")
   tabs <- getURL(url)
   read <- readHTMLTable(tabs, stringsAsFactors = F)
