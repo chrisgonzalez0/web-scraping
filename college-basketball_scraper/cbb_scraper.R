@@ -260,8 +260,14 @@ for(i in 1:length(boxscore_ids) ){
     boxes$team=n[k]
     boxes$box_score_id=boxscore_ids[i]
     boxes=boxes[boxes$MP!="MP",]
-    boxes$player_id=ifelse(length(href)==0,"",href)
     
+    if(length(href)==0){
+      boxes$player_id=""
+    }
+    else{
+      boxes$player_id=href   
+    }
+
     colnames(boxes)=c("Starters","MP","FG","FGA","FG%","2P","2PA","2P%","3P","3PA","3P%","FT","FTA","FT%","ORB","DRB",
                       "TRB","AST","STL","BLK","TOV","PF","PTS","team","box_score_id","player_id")
     box=rbind(box,boxes)
