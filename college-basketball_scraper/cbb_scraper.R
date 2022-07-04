@@ -168,7 +168,7 @@ save(years_df,file="r-data/cbb_teams_years.RData")
 
 ## Schedules
 schedules=data.frame()
-for(i in 2599:nrow(years_df)){
+for(i in 5601:nrow(years_df)){
   print(i)
   url <- paste("https://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],"-schedule.html",sep="")
   tabs <- getURL(url)
@@ -200,43 +200,16 @@ for(i in 2599:nrow(years_df)){
   schedule$opp_team_id=href
   
   schedule$year=years_df$year[i]
+  if(class(schedule)=="list"){
+    next
+  }
+  
   colnames(schedule)=c("G","Date","Type","h_a","Opponent","Conf","w_l","Tm","Opp",
                         "OT","W","L","Streak","Arena","team_id","boxscore_id","opp_team_id",
                         "year")
   
   schedules=rbind(schedules,schedule)  
 }
-
-
-schedules$year=year[zz]
-schedules1=schedules
-
-
-# 2014 and Less
-
-# 2015 and New
-
-schedules=schedules[,c("G","Date","Time","Network","Type","h_a","Opponent","Conf","h_a2","Tm","Opp",
-                       "OT","W","L","Streak","Arena","team_id","id","opp_team_id","year")]
-
-schedules$Date=paste("'",schedules$Date,"'",sep="")
-schedules$Time=paste("'",schedules$Time,"'",sep="")
-schedules$Network=paste("'",schedules$Network,"'",sep="")
-schedules$Type=paste("'",schedules$Type,"'",sep="")
-schedules$h_a=paste("'",schedules$h_a,"'",sep="")
-
-schedules$Opponent=gsub("'","",schedules$Opponent)
-schedules$Opponent=paste("'",schedules$Opponent,"'",sep="")
-schedules$Conf=paste("'",schedules$Conf,"'",sep="")
-schedules$h_a2=paste("'",schedules$h_a2,"'",sep="")
-schedules$Opponent=paste("'",schedules$Opponent,"'",sep="")
-schedules$OT=paste("'",schedules$OT,"'",sep="")
-schedules$Streak=paste("'",schedules$Streak,"'",sep="")
-schedules$Arena=gsub("'","",schedules$Arena)
-schedules$Arena=paste("'",schedules$Arena,"'",sep="")
-schedules$team_id=paste("'",schedules$team_id,"'",sep="")
-schedules$id=paste("'",schedules$id,"'",sep="")
-schedules$opp_team_id=paste("'",schedules$opp_team_id,"'",sep="")
 
 save(schedules,file="r-data/cbb_schedules.RData")
 
