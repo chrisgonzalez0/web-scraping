@@ -12,6 +12,10 @@ webpage_min_chars_between <- function(text,pattern1,pattern2){
   start=unlist(gregexpr(pattern1,text))
   stops=unlist(gregexpr(pattern2,text))
   
+  if(start[1]==-1 | stops[1]==-1){
+    return("")
+  }
+  
   xx=merge(start,stops)
   xx$logic=(xx$x < xx$y)*1
   xx=xx[xx$logic==1,]
@@ -230,10 +234,12 @@ save(schedules,file="r-data/cbb_schedules.RData")
 
 ## Box Scores 
 
-count=1
+boxscore_ids=unique(schedules$boxscore_id)
+boxscore_ids=boxscore_ids[boxscore_ids!=""]
 box=data.frame()
-for(i in 1:nrow(schedules)){
-  url <- paste("https://www.sports-reference.com/cbb/boxscores/",gsub("'","",schedules$id[i]),".html",sep="")
+for(i in 1:length(boxscore_ids) ){
+  print(i)
+  url <- paste("https://www.sports-reference.com/cbb/boxscores/",gsub("'","",boxscore_ids[i]),".html",sep="")
   tabs <- getURL(url)
   read <- readHTMLTable(tabs, stringsAsFactors = F)
   
@@ -242,24 +248,31 @@ for(i in 1:nrow(schedules)){
   n=n[grep("box-score-basic",n)]
   read=read[n]
   for(k in 1:length(read)){
+    link=paste(readLines(url),collapse=" ")  
+    link=webpage_min_chars_between(link,n[k],"</table>")
+    
+    ## player ids
+    href=webpage_min_chars_between(link[1],"<a href=\"/cbb/players/","</a>")
+    href=href[grepl("href",href)]
+    href=substring_patterns(href,"<a href=\"/cbb/players/",".html")
+    
     boxes=read[[k]]
     boxes$team=n[k]
-    boxes$opp_team=n[!(n %in% n[k])]
-    boxes$box_score_id=gsub("'","",schedules$id[i])
-    boxes$year=year[zz]
+    boxes$box_score_id=boxscore_ids[i]
+    boxes=boxes[boxes$MP!="MP",]
+    boxes$player_id=ifelse(length(href)==0,"",href)
     
     colnames(boxes)=c("Starters","MP","FG","FGA","FG%","2P","2PA","2P%","3P","3PA","3P%","FT","FTA","FT%","ORB","DRB",
-                      "TRB","AST","STL","BLK","TOV","PF","PTS","team","opp_team","box_score_id","year")
+                      "TRB","AST","STL","BLK","TOV","PF","PTS","team","box_score_id","player_id")
     box=rbind(box,boxes)
   }
   gc()
   
-  if(nrow(box)>10000){
-    save(box,file=paste("/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/",year[zz],"_pt",count,".RData",sep=""))
-    # save(i,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/boxscores_2019.RData")
-    count=count+1
+  if(nrow(box)>100000 | i==length(boxscore_ids)){
+    save(box,file=paste("r-data/boxscores_",i,".RData",sep=""))
     box=data.frame()
     gc()
+    print(paste('saved at ',i))
   }
   
 }
