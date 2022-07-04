@@ -1,7 +1,31 @@
-setwd("/Users/chrisgonzalez/web-scraping/college_basketball_scraper/")
+setwd("/Users/chrisgonzalez/Documents/web-scraping/college-basketball_scraper/")
 
 library(XML)
 library(RCurl)
+
+substring_patterns <- function(text,pattern1,pattern2) {
+  href=substr(text,regexpr(pattern1,text )+nchar(pattern1),regexpr(pattern2,text)-1)
+  return(href)
+}
+
+webpage_min_chars_between <- function(text,pattern1,pattern2){
+  start=unlist(gregexpr(pattern1,text))
+  stops=unlist(gregexpr(pattern2,text))
+  
+  xx=merge(start,stops)
+  xx$logic=(xx$x < xx$y)*1
+  xx=xx[xx$logic==1,]
+  xx$rank = ave (xx$y, xx$x, FUN = function(x) rank (x, ties.method ="min"))
+  xx=xx[xx$rank==1,]
+  
+  id=c()
+  for(j in 1:nrow(xx)){
+    test=substr(link,xx$x[j],xx$y[j]-1)
+    id=c(id,test)
+  }
+  return(id)
+}
+
 
 # Set Up Vars #
 year=seq(2005,2022)
@@ -67,7 +91,7 @@ for(zz in 1:length(year)){
 
 ## Rosters 
 rosters=data.frame()
-for(i in 5417:nrow(years_df)){
+for(i in 1:nrow(years_df)){
   print(i)
   
   url <- paste("https://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],".html",sep="")
@@ -144,81 +168,53 @@ save(years_df,file="r-data/cbb_teams_years.RData")
 
 ## Schedules
 schedules=data.frame()
-for(i in 1:nrow(years_df)){
-  
+for(i in 2599:nrow(years_df)){
+  print(i)
   url <- paste("https://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],"-schedule.html",sep="")
   tabs <- getURL(url)
   read <- readHTMLTable(tabs, stringsAsFactors = F)
+  if(length(read)==0){
+    next
+  }
+  
   
   #read=readHTMLTable(paste("http://www.sports-reference.com/cbb/schools/",gsub("'","",teams$id[i]),"/",year[zz],"-schedule.html",sep=""))  
   schedule=read$schedule
+  schedule=schedule[,!(colnames(schedule) %in% c("Time","Network"))]
+  
   schedule=schedule[schedule$Date!="Date",]
-  schedule$team_id=teams$id[i]
+  schedule$team_id=years_df$id[i]
+  
   link=paste(readLines(paste("http://www.sports-reference.com/cbb/schools/",gsub("'","",years_df$id[i]),"/",years_df$year[i],"-schedule.html",sep="")),collapse=" ")  
   
   ## Box Id's ##
-  start=unlist(gregexpr("><a href=\"/cbb/boxscores/",link))
-  stops=unlist(gregexpr(".html\">",link))
-  
-  xx=merge(start,stops)
-  xx$logic=(xx$x < xx$y)*1
-  xx=xx[xx$logic==1,]
-  xx$rank = ave (xx$y, xx$x, FUN = function(x) rank (x, ties.method ="min"))
-  xx=xx[xx$rank==1,]
-  
-  id=c()
-  for(j in 1:nrow(xx)){
-    test=substr(link,xx$x[j]+25,xx$y[j]-1)
-    id=c(id,test)
-    
-  }
+  id=webpage_min_chars_between(link,"date_game","</td>")
+  id=id[nchar(id) < 150]
+  href=substring_patterns(id,"<a href=\"/cbb/boxscores/",".html") ## use R function here 
+  schedule$boxscore_id=href
   
   ## Opp Id's ##
-  str1="data-stat=\"opp_name\" ><a href=\'/cbb/schools/"
-  str2=paste("/",year[zz],".html",sep="")
-  start=unlist(gregexpr(str1,link))
-  stops=unlist(gregexpr(str2,link))
-
-  xx=merge(start,stops)
-  xx$logic=(xx$x < xx$y)*1
-  xx=xx[xx$logic==1,]
-  xx$rank = ave (xx$y, xx$x, FUN = function(x) rank (x, ties.method ="min"))
-  xx=xx[xx$rank==1,]
+  opp_id=webpage_min_chars_between(link,"opp_name","</td>")
+  opp_id=opp_id[nchar(opp_id) < 150]
+  href=substring_patterns(opp_id,"opp_name\" ><a href='/cbb/schools/",paste("/",years_df$year[i],".html",sep="") ) ## use R function here 
+  schedule$opp_team_id=href
   
-  opp_id=c()
-  for(j in 1:nrow(xx)){
-    test=substr(link,xx$x[j]+nchar(str1),xx$y[j]-1)
-    opp_id=c(opp_id,test)
-    
-  }
-  
-  
-  id=unique(id)
-  if(nrow(schedule)!=length(id)){
-    schedule=schedule[1:ifelse(nrow(schedule)>=length(id),length(id),nrow(schedule)),]
-  }
-  schedule$id=id
-  schedule$team_id=gsub("'","",teams$id[i])
-  
-  schedule$opp_team_id=""
-  schedule$opp_team_id[schedule$Conf!=""]=opp_id
+  schedule$year=years_df$year[i]
+  colnames(schedule)=c("G","Date","Type","h_a","Opponent","Conf","w_l","Tm","Opp",
+                        "OT","W","L","Streak","Arena","team_id","boxscore_id","opp_team_id",
+                        "year")
   
   schedules=rbind(schedules,schedule)  
-  
 }
+
+
 schedules$year=year[zz]
 schedules1=schedules
 
-schedules$Time=""
-schedules$Network=""
 
 # 2014 and Less
-colnames(schedules)=c("G","Date","Time","Type","h_a","Opponent","Conf","h_a2","Tm","Opp",
-                     "OT","W","L","Streak","Arena","team_id","id","opp_team_id","year","Network")
 
 # 2015 and New
- colnames(schedules)=c("G","Date","Time","Network","Type","h_a","Opponent","Conf","h_a2","Tm","Opp",
-                       "OT","W","L","Streak","Arena","team_id","id","opp_team_id","year")
 
 schedules=schedules[,c("G","Date","Time","Network","Type","h_a","Opponent","Conf","h_a2","Tm","Opp",
                        "OT","W","L","Streak","Arena","team_id","id","opp_team_id","year")]
@@ -242,7 +238,7 @@ schedules$team_id=paste("'",schedules$team_id,"'",sep="")
 schedules$id=paste("'",schedules$id,"'",sep="")
 schedules$opp_team_id=paste("'",schedules$opp_team_id,"'",sep="")
 
-save(schedules,file="/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/schedules_2019.RData")
+save(schedules,file="r-data/cbb_schedules.RData")
 
 # Schedules Inserts 
 # library(RPostgreSQL)
