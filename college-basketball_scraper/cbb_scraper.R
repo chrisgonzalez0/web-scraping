@@ -237,7 +237,7 @@ save(schedules,file="r-data/cbb_schedules.RData")
 boxscore_ids=unique(schedules$boxscore_id)
 boxscore_ids=boxscore_ids[boxscore_ids!=""]
 box=data.frame()
-for(i in 1:length(boxscore_ids) ){
+for(i in 6780:length(boxscore_ids) ){
   print(i)
   url <- paste("https://www.sports-reference.com/cbb/boxscores/",gsub("'","",boxscore_ids[i]),".html",sep="")
   tabs <- getURL(url)
@@ -253,14 +253,17 @@ for(i in 1:length(boxscore_ids) ){
     link=webpage_min_chars_between(link,paste("id=\"",n[k],"\"",sep=""),"</table>")
     
     ## player ids
-    href=webpage_min_chars_between(link[1],"<a href=\"/cbb/players/","</a>")
-    href=href[grepl("href",href)]
+    #href=webpage_min_chars_between(link[1],"<a href=\"/cbb/players/","</a>")
+    
+    link[1]=webpage_min_chars_between(link[1],"<tbody>","</tbody>")
+    href=webpage_min_chars_between(link[1],"data-stat=\"player\" ","</th>")
+    #href=href[grepl("href",href)]
     href=substring_patterns(href,"<a href=\"/cbb/players/",".html")
     
     boxes=read[[k]]
     boxes$team=n[k]
     boxes$box_score_id=boxscore_ids[i]
-    boxes=boxes[boxes$MP!="MP",]
+
     
     if(length(href)==0){
       boxes$player_id=""
@@ -268,6 +271,7 @@ for(i in 1:length(boxscore_ids) ){
     else{
       boxes$player_id=href   
     }
+    boxes=boxes[boxes$MP!="MP",]
 
     colnames(boxes)=c("Starters","MP","FG","FGA","FG%","2P","2PA","2P%","3P","3PA","3P%","FT","FTA","FT%","ORB","DRB",
                       "TRB","AST","STL","BLK","TOV","PF","PTS","team","box_score_id","player_id")
