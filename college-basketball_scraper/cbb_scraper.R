@@ -249,7 +249,8 @@ for(i in 1:length(boxscore_ids) ){
   read=read[n]
   for(k in 1:length(read)){
     link=paste(readLines(url),collapse=" ")  
-    link=webpage_min_chars_between(link,n[k],"</table>")
+    #link=webpage_min_chars_between(link,n[k],"</table>")
+    link=webpage_min_chars_between(link,paste("id=\"",n[k],"\"",sep=""),"</table>")
     
     ## player ids
     href=webpage_min_chars_between(link[1],"<a href=\"/cbb/players/","</a>")
