@@ -1,151 +1,63 @@
-# Connect to DB
-library(RPostgreSQL)
-drv <- dbDriver("PostgreSQL")
-con <- dbConnect(drv, dbname="basketball",user="postgres",password="estarguars",host = "localhost", port = 5432)
-
 ## Change working directory for local run and data set location
-setwd("/Users/chrisgonzalez/web-scraping/college_basketball_scraper/r-data/")
-load("2019_teams.RData")
+setwd("/Users/chrisgonzalez/Documents/web-scraping/college-basketball_scraper/")
+
+library(DBI)
+con <- dbConnect(RPostgres::Postgres(),
+                 dbname = 'postgres', 
+                 host = 'localhost', 
+                 port = 5432,
+                 user = 'postgres',
+                 password = 'estarguars')
 
 ## Team Inserts 
-temp=teams
-colnames(temp)=make.names(colnames(temp))
-cols=colnames(temp)[!(make.names(colnames(temp)) %in% c("X.","X..1","X..2","X..4"))]
-temp$X..3="NULL"
+load("r-data/cbb_teams_years.RData")
+years_df$School=trimws(gsub("''","'",substr(years_df$School,2,nchar(years_df$School)-1)))
+years_df$tourney=trimws(gsub("''","'",substr(years_df$tourney,2,nchar(years_df$tourney)-1)))
+years_df$id=trimws(gsub("''","'",substr(years_df$id,2,nchar(years_df$id)-1)))
 
-temp=temp[,cols]
+dbWriteTable(con, "cbb_teams", years_df, append=TRUE, row.names=FALSE)
+rm(years_df)
+## Inserted cbb_teams done 
 
-x=paste(temp,collapse = ",",sep="")
-x=apply(temp,1,function(x) { paste(x,collapse=",")})
-x=paste("(",x,")",sep="")
-
-bands <- round(seq(0,nrow(temp),length.out=(ceiling(nrow(temp)/1000)+1)))
-
-for (i in 1:(length(bands)-1)){
-  y=x[(bands[i]+1):bands[i+1]]
-  y=paste(y,collapse=",",sep="")
-  text=paste("insert into college_seasons (rk,school,games,wins,losses,w_l_perc,srs,sos,conf_wins,conf_losses,home_wins,home_losses,away_wins,away_losses,tm_pts,opp_pts,mp,fg,fga,fg_perc,x3p,x3pa,x3p_perc,ft,fta,ft_perc,orb,trb,ast,stl,blk,tov,pf,tourney,team_id,year) values ",y,sep="")
-  check=dbGetQuery(con,text)
-  print(check)
-}
 
 # College Rosters Inserts 
-load("2019_rosters.RData")
-rosters=rosters[,c(-2,-6,-7,-8)]
-temp=rosters
+load("r-data/cbb_rosters.RData")
+rosters$Player=trimws(gsub("''","'",substr(rosters$Player,2,nchar(rosters$Player)-1)))
+rosters$Class=trimws(gsub("''","'",substr(rosters$Class,2,nchar(rosters$Class)-1)))
+rosters$Pos=trimws(gsub("''","'",substr(rosters$Pos,2,nchar(rosters$Pos)-1)))
+rosters$Height=trimws(gsub("''","'",substr(rosters$Height,2,nchar(rosters$Height)-1)))
+rosters$id=trimws(gsub("''","'",substr(rosters$id,2,nchar(rosters$id)-1)))
+rosters$team=trimws(gsub("''","'",substr(rosters$team,2,nchar(rosters$team)-1)))
 
-x=paste(temp,collapse = ",",sep="")
-x=apply(temp,1,function(x) { paste(x,collapse=",")})
-x=paste("(",x,")",sep="")
-
-bands <- round(seq(0,nrow(temp),length.out=(ceiling(nrow(temp)/1000)+1)))
-for (i in 1:(length(bands)-1)){
-  y=x[(bands[i]+1):bands[i+1]]
-  y=paste(y,collapse=",",sep="")
-  text=paste("insert into college_rosters (player,class,pos,ht,summary,player_id,team_id,year) values ",y,sep="")
-  check=dbGetQuery(con,text)
-  print(check)
-}
+dbWriteTable(con, "cbb_rosters", rosters, append=TRUE, row.names=FALSE)
+rm(rosters)
+## Inserted cbb_rosters done 
 
 
 # Box Scores Inserts, Loop over every file saved
-files=list.files(path=".")
-files=files[grepl("_pt",files)]
+files=list.files(path="r-data/")
+files=files[grepl("boxscores",files)]
 
+rowcount=0
 for(j in 1:length(files)){
-  load(files[j])
-  box=box[box$Starters!="Reserves",]
-  box$Starters=gsub("'","''",box$Starters)
-  box$Starters=paste("'",box$Starters,"'",sep="")
-  box$FG=as.character(box$FG)
-  box$FG[is.na(box$FG)]="0"
-  box$FG[box$FG==""]="0"
-  box$FGA=as.character(box$FGA)
-  box$FGA[is.na(box$FGA)]="0"
-  box$FGA[box$FGA==""]="0"  
-  box$`FG%`=as.character(box$`FG%`)
-  box$`FG%`[is.na(box$`FG%`)]="0"
-  box$`FG%`[box$`FG%`==""]="0"
-  box$`2P`=as.character(box$`2P`)
-  box$`2P`[box$`2P`==""]="0"
-  box$`2PA`=as.character(box$`2PA`)
-  box$`2PA`[box$`2PA`==""]="0"
-  box$`2P%`=as.character(box$`2P%`)
-  box$`2P%`[box$`2P%`==""]="0"
-
-  box$`3P`=as.character(box$`3P`)
-  box$`3P`[box$`3P`==""]="0"
-  box$`3PA`=as.character(box$`3PA`)
-  box$`3PA`[box$`3PA`==""]="0"
-  box$`3P%`=as.character(box$`3P%`)
-  box$`3P%`[box$`3P%`==""]="0"
-
-  box$FT=as.character(box$FT)
-  box$FT[box$FT==""]="0"
-  box$FTA=as.character(box$FTA)
-  box$FTA[box$FTA==""]="0"
-  box$`FT%`=as.character(box$`FT%`)
-  box$`FT%`[box$`FT%`==""]="0"
-
-  box$MP=as.character(box$MP)
-  box$MP[box$MP==""]="0"
-  box$ORB=as.character(box$ORB)
-  box$ORB[box$ORB==""]="0"
-  box$DRB=as.character(box$DRB)
-  box$DRB[box$DRB==""]="0"
-  box$TRB=as.character(box$TRB)
-  box$TRB[box$TRB==""]="0"
-  box$AST=as.character(box$AST)
-  box$AST[box$AST==""]="0"
-  box$STL=as.character(box$STL)
-  box$STL[box$STL==""]="0"
-  box$BLK=as.character(box$BLK)
-  box$BLK[box$BLK==""]="0"
-  box$TOV=as.character(box$TOV)
-  box$TOV[box$TOV==""]="0"
-  box$PF=as.character(box$PF)
-  box$PF[box$PF==""]="0"
-  box$PTS=as.character(box$PTS)
-  box$PTS[box$PTS==""]="0"
-    
-  box$team=paste("'",box$team,"'",sep="")
-  box$opp_team=paste("'",box$opp_team,"'",sep="")
-  box$box_score_id=paste("'",box$box_score_id,"'",sep="")  
-  
-  temp=box
-  
-  x=paste(temp,collapse = ",",sep="")
-  x=apply(temp,1,function(x) { paste(x,collapse=",")})
-  x=paste("(",x,")",sep="")
-  
-  bands <- round(seq(0,nrow(temp),length.out=(ceiling(nrow(temp)/1000)+1)))
-  for (i in 1:(length(bands)-1)){
-    y=x[(bands[i]+1):bands[i+1]]
-    y=paste(y,collapse=",",sep="")
-    text=paste("insert into college_boxscores (player,mp,fg,fga,fg_perc,x2p,x2pa,x2p_perc,x3p,x3pa,x3p_perc,ft,fta,ft_perc,orb,drb,trb,ast,stl,blk,tov,pf,pts,team_id,opp_team_id,box_score_id,year) values ",y,sep="")
-    check=dbGetQuery(con,text)
-    print(check)
-  }
+  print(j)
+  load( paste("r-data/", files[j],sep="") )
+  box=unique(box)
+  dbWriteTable(con, "cbb_boxscores", box, append=TRUE, row.names=FALSE)
+  print(nrow(box))
+  rowcount=rowcount+nrow(box)
+  rm(box)
 }
-  
+print(rowcount)
+## Inserted cbb_boxscores done 
 
 ## Write Schedules into db 
-load("schedules_2019.RData")  
+load("r-data/cbb_schedules.RData")  
+schedules$team_id=trimws(gsub("''","'",substr(schedules$team_id,2,nchar(schedules$team_id)-1)))
+dbWriteTable(con, "cbb_schedules", schedules, append=TRUE, row.names=FALSE)
+rm(schedules)
+## Inserted cbb_schedules done 
 
-schedules$Opponent=gsub("'","",schedules$Opponent)
-schedules$Opponent=paste("'",schedules$Opponent,"'",sep="")
-temp=schedules
-
-x=paste(temp,collapse = ",",sep="")
-x=apply(temp,1,function(x) { paste(x,collapse=",")})
-x=paste("(",x,")",sep="")
-
-bands <- round(seq(0,nrow(temp),length.out=(ceiling(nrow(temp)/1000)+1)))
-
-for (i in 1:(length(bands)-1)){
-  y=x[(bands[i]+1):bands[i+1]]
-  y=paste(y,collapse=",",sep="")
-  text=paste("insert into college_schedules (g,date,time,network,type,h_a,opponent,conf,h_a2,tm,opp,ot,w,l,streak,arena,team_id,box_score_id,opp_team_id,year) values ",y,sep="")
-  check=dbGetQuery(con,text)
-  print(check)
-}
+dbDisconnect(con)
+rm(con)
+gc()
