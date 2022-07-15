@@ -237,7 +237,7 @@ save(schedules,file="r-data/cbb_schedules.RData")
 boxscore_ids=unique(schedules$boxscore_id)
 boxscore_ids=boxscore_ids[boxscore_ids!=""]
 box=data.frame()
-for(i in 6780:length(boxscore_ids) ){
+for(i in 1:length(boxscore_ids) ){
   print(i)
   url <- paste("https://www.sports-reference.com/cbb/boxscores/",gsub("'","",boxscore_ids[i]),".html",sep="")
   tabs <- getURL(url)
